@@ -57,7 +57,7 @@ hold on
 med_scan    = nanmedian( all_scans )                                            ;
 h.med       = plot( med_scan .* x_weight  , med_scan .* y_weight , 'c-' ,   	...
                             'LineSmoothing' , 'on' ,                            ...
-                            'LineWidth' , 2                                     )                        
+                            'LineWidth' , 1                                     )                        
                         
 hold on 
 h.fit_p     = plot( 0 , 0 , 'g' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
@@ -103,8 +103,8 @@ drawnow
 last_time       = tic                                                       ;
 ifp             = urg_struct(1).header.scanMsec * 1e-3                      ;
 num_scans       = numel( urg_struct )                                       ;
-desired_scans   = 4000 : 23500                                              ;
-med_rad         = 7                                                        ;
+desired_scans   = 1 : num_scans ;% 4000 : 23500                                              ;
+med_rad         = 5                                                        ;
 med_range       = -med_rad : med_rad                                        ;
 
 for i_scan = desired_scans
@@ -116,7 +116,7 @@ for i_scan = desired_scans
         set( h.med , 'XData' , med_x , 'YData' , med_y )                        ;
         
         %     scan       	= all_scans( i_scan , : )                                   ;
-        scan        = all_scans( i_scan , : )                               	;
+        scan        = med_scan                                                  ;
         pipe_fit                                                                ;
         flat_fit    = fit_curve - min( fit_curve )                              ;
         x_scan      = scan .* x_weight                                          ;
@@ -124,11 +124,7 @@ for i_scan = desired_scans
         set( h.raw_p, 'XData' , x_scan , 'YData' , y_scan  )                    ;
         set( h.red_filt, 'XData' , angles( fit_range ) , 'YData' , scan( fit_range )  )                      ;
         last_time   = tic                                                       ;
-        title( sprintf( 'Timestamp %d, %s, scan %d of %d' ,                     ...
-               urg_struct( i_scan ).timeStamp ,                                 ...
-               urg_struct( i_scan ).dateString ,                                ...
-               i_scan ,                                                         ...
-               num_scans ) )
+        title( sprintf( 'Timestamp %d, %s, scan %d of %d' , urg_struct( i_scan ).timeStamp , i_scan , numel( urg_struct ) ) )
         drawnow
     catch err
     end

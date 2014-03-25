@@ -6,12 +6,9 @@ function urg_struct = urg_struct_read( fid )
     field_string        = field_cell{ 1 }                                                                   ;
     if strcmp( field_cell{ 1 }{ 3 }( 3 ) , ':' )
         temp_cols           = reshape( field_string  , 4 , [] )'
-        temp_cols( : , 2 )  = []
-        cols            = temp_cols 
-    else
-        cols                = reshape( field_string  , 3 , [] )'                                         	;
+        temp_cols{ : , 2 }  = [ temp_cols( : , 2 ) ] , [ temp_cols( : , 3 ) ]
     end
-    
+    cols                = reshape( field_string  , 3 , [] )'                                                ;
     cellnum             = @( v ) str2double( v )                                                            ;
     formatIn            = 'yyyy:m:dd:HH:MM:SS:FFF'                                                          ; 
     datefunc            = @( c ) cellfun( datenum( c , evalin( 'caller' , 'formatIn' ) ) )                  ;
