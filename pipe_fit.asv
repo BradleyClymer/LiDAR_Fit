@@ -28,7 +28,9 @@ y_offset        = cos( fit_angle ) * rem                                        
 
 
 scan_fix        = scan                                                          ;
-
+                  set( h.min_mark ,                                             ...
+                       'XData' , ( fit_angle + pi/2 ) * 180/pi ,                ...
+                       'YData' , min_fit )                                      ;
 scan_fix( [ 1 end ] ) = 0                                                       ;                 
 
                
@@ -54,15 +56,12 @@ rotated         = [ x_fit ; y_fit ]' * rot_mat                                  
 x_fit           = rotated( : , 1 )' - 0*par( 1 )                                ;
 y_fit           = rotated( : , 2 )' - 0*par( 2 )                                ;
 
-x_fit           = x_fit + 1*x_offset                                            ;
+x_fit           = x_fit + 1*x_offset                                             ;
 y_fit           = y_fit + 1*y_offset                                            ;                                    
                                     
 [ a , b , R ]   = deal( par( 1 ) , par( 2 ) , par( 3 ) )                    	;
 
 set( h.fit_p ,  'XData' , x_fit ,    'YData' , y_fit  )                         ;
-set( h.plot4 ,  'XData' , angles( : ) ,   'YData' , fit_curve )         ;
+set( h.plot4 ,  'XData' , angles( fit_range ) ,   'YData' , fit_curve )         ;
 set( h.circle , 'XData' , par( 3 ) * cosd( 0 : 360 ) ,                          ...
                 'YData' , par( 3 ) * sind( 0 : 360 ) )                          ;
-set( h.min_mark,'XData' , angles( mean( find( fit_curve == min( fit_curve ) ) ) ) ,                ...
-                'YData' , min_fit )                                      ;
-                 figure( gcf )

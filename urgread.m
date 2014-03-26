@@ -1,13 +1,13 @@
 clc
 close all hidden
 colordef black
-clear
+% clear
 
 if ~exist( 'urg_file' , 'var' )
     [ f , p ]   = uigetfile( '*.ubh' , 'Select UrgBenri LiDAR data file' )
     urg_file    = fullfile( p , f )
 end
-              fclose( 'all' )
+                  fclose( 'all' )
 fid             = fopen( urg_file )
 
 if ~exist( 'urg_struct' , 'var' ) 
@@ -49,13 +49,13 @@ end
 z_grid      = meshgrid( 1:size( all_x , 1 ) , 1:size( all_x , 2 ) )'            ;
 
 h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
-h.scan      = subplot( 4 , 1 , 1:3 )
+h.scan      = subplot( 1 , 4 , 1:2 )
 h.raw_p     = plot( 0 , 0 , 'r' ,                                               ...
                             'LineSmoothing' , 'on' ,                            ...
                             'LineWidth' , 2                                     )
 hold on  
 med_scan    = nanmedian( all_scans )                                            ;
-h.med       = plot( med_scan .* x_weight  , med_scan .* y_weight , 'c-' ,   	...
+h.med       = plot( med_scan .* x_weight  , med_scan .* y_weight , 'c--' ,   	...
                             'LineSmoothing' , 'on' ,                            ...
                             'LineWidth' , 2                                     )                        
                         
@@ -63,9 +63,11 @@ hold on
 h.fit_p     = plot( 0 , 0 , 'g' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
 h.circle    = plot( 0 , 0 , 'y' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
 h.template  = plot( 24*cosd( 0:360 ) ,                                          ...
-                    24*sind( 0:360 ), 'w' ,                                     ...
+                    24*sind( 0:360 ),                                           ...
+                    'Color' , 0.6 * [ 1 1 1 ] ,                                 ...
+                    'LineStyle' , '-.' ,                                    	...
                     'LineSmoothing' , 'on' ,                                    ...
-                    'LineWidth' , 2 )     
+                    'LineWidth' , 2 )    
 plot( 100 * [ -1 1 ] , [ 0 0 ] , 'Color' , [ 0 0 1 ] , 'LineSmoothing' , 'on' )
 plot( [ 0 0 ] , 100 * [ -1 1 ] , 'Color' , [ 0 0 1 ] , 'LineSmoothing' , 'on' )
 axis equal
@@ -75,11 +77,15 @@ ylabel( 'Inches' )
 set( gcf, 'Units' , 'Normalized' )
 xlim( xlims )
 ylim( [ -26 26  ] ) 
+legend( { 'Raw Noisy Data' ,            ...
+          'Median Filtered' ,           ...
+          'Shifted',                    ...
+          'Pipe Fit' ,                  ...
+          'Pipe Template' } )           ;
 
-
-h.fit       = subplot( 4 , 1 , 4 )                                              ;
+h.fit       = subplot( 1 , 4 , 3:4 )                                              ;
 h.red_filt 	= plot( 0 , 0 , 'r+' ,   'LineSmoothing' , 'on' ,                 	...
-                                    'MarkerSize' , 10 ,                         ...
+                                    'MarkerSize' , 3 ,                          ...
                                     'LineWidth' , 2 )                           ;
 hold on 
 h.plot4     = plot( 0 , 0 , 'y' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
@@ -89,12 +95,13 @@ h.min_mark  = scatter( 0 , 0 , 'o', 'MarkerEdgeColor' , 'b' ,                   
                                     'MarkerFaceColor' , [ 0 0.5 0.5 ] ,         ...
                                     'LineWidth' , 3 )                           ;
                                                                
-axis equal
+% axis equal
 grid on
 xlabel( 'Degrees, -45 : 225' )
 ylabel( 'Inches' )
 set( gcf, 'Units' , 'Normalized' )
 xlim( [ -45 225 ] )
+ylim( [ 10 22 ] )
 all_args        = { all_x , all_y , z_grid , 'EdgeColor' , 'none' }         ;
 set( h.fit_axes , 'XTick' , -60 : 30 : 255 )
 set( h.singlefig , 'OuterPosition' ,  [ 0.5000     0.0    0.5000    1 ] )
@@ -103,9 +110,10 @@ drawnow
 last_time       = tic                                                       ;
 ifp             = urg_struct(1).header.scanMsec * 1e-3                      ;
 num_scans       = numel( urg_struct )                                       ;
-desired_scans   = 4000 : 23500                                              ;
-med_rad         = 7                                                        ;
+desired_scans   = 17000 : 18000                                             ;
+med_rad         = 7                                                         ;
 med_range       = -med_rad : med_rad                                        ;
+
 
 for i_scan = desired_scans
     try
@@ -131,5 +139,6 @@ for i_scan = desired_scans
                num_scans ) )
         drawnow
     catch err
+        rethrow( err )
     end
 end

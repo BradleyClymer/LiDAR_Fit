@@ -2,7 +2,7 @@ function urg_struct = urg_struct_read( fid )
     clc
     if nargin == 0, fid = fopen( 'all' ), end                                                               ;
     header_struct       = read_urg_header( fid )                                                            ; 
-    field_cell          = textscan( fid , '%s' ,'CollectOutput' , true , 'CommentStyle' , { '[' , ']' } )   ;    
+    field_cell          = textscan( fid , '%s' ,'CollectOutput' , true , 'CommentStyle' , { '[' , ']' } , 'BufSize' , 100000 )   ;    
     field_string        = field_cell{ 1 }                                                                   ;
     if strcmp( field_cell{ 1 }{ 3 }( 3 ) , ':' )
         temp_cols           = reshape( field_string  , 4 , [] )'
