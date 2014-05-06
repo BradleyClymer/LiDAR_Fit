@@ -11,24 +11,39 @@ end
 fid             = fopen( urg_file )
 
 if ~exist( 'urg_struct' , 'var' ) 
-    urg_struct      = urg_struct_read( fid )
+    urg_struct      = urg_struct_read( fid )                                
 end
 
-mm_conversion   = 0.0393701                                                 ;
+mm_conversion   = 1 / 25.4                                                  ;   % 1mm in inches
 
-angles          = linspace( -45 , 225 , numel( urg_struct( 1 ).scan ) )     ;
-x_weight        = cosd( angles )                                           	;
-y_weight        = sind( angles )                                            ;
+angles_deg  	= linspace( -45 , 225 , numel( urg_struct( 1 ).scan ) )     ;   % angles of LiDAR scan, in as many
+                                                                                % points as one scan has
+aux_deg         = linspace( -45 , 315 , numel( angles_deg ) + 90*4 )        ;
+                                                                                
+x_weight        = cosd( angles_deg )                                        ;   % pre-calculate the weights of the angles
+y_weight        = sind( angles_deg )                                        ;
 
-filter_order    = 10                                                        ;
-filter_roll     = 1                                                         ;
-filter_raw      = exp( filter_roll * ( 1 : filter_order )' /filter_order  ) ;        
-filter_new      = filter_raw / ( sum( filter_raw' )' / 1 )                  ;
-filter_mat      = repmat( filter_new , 1 , 3 )                   
-par_rec         = repmat( [ -2 -10 24 ] , size( filter_mat , 1 ) , 1 )      ;
-min_rec         = zeros( numel( filter_order ) , 1 )                        ;
+aux_x_w         = cosd( aux_deg )                                           ;   % extra angles for compensation
+aux_y_w         = sind( aux_deg )                                           ;   
+
+pipe_in         = 27/2                                                      ;   % pipe radius in inches
+pipe_mm         = pipe_in / mm_conversion                                   ;   %  '      '     '  mm
+mm_rad          = pipe_mm / 2                                               ;   % pipe radius in mm
+
+filter_order    = 10                                                        ;   % order of the median filter
+filter_roll     = 1                                                         ;   % filter roll-off rate
+filter_raw      = exp( filter_roll * ( 1 : filter_order )' /filter_order  ) ;   % generate some filter coefficients
+filter_new      = filter_raw / ( sum( filter_raw' )' / 1 )                  ;   % normalize coefficients
+filter_mat      = repmat( filter_new , 1 , 3 )                              ;   % matrix of coefficients
+par_rec         = repmat( [ -2 -10 24 ] , size( filter_mat , 1 ) , 1 )      ;   % initialize record of circle parameters
+min_rec         = zeros( numel( filter_order ) , 1 )                        ;   % initialize record of minima
+struct_size_vec = cell2mat( arrayfun( @( x ) size( x.scan ) , urg_struct ,  ...
+                           'UniformOutput' , false ) )                      ;   % size of scans. ex: 1081x1 
+bad_scans       = struct_size_vec( : , 1 ) ~= 1081                          ;   % find non-conforming scans
+urg_struct( bad_scans ) = []                                                ;   % remove bad scans
 
 if ~exist( 'xlims' , 'var' )
+    struct_size_vec = cell2mat( arrayfun( @( x ) size( x.scan ) , urg_struct , 'UniformOutput' , false ) )
     all_scans       = double( horzcat( urg_struct.scan )' ) * mm_conversion     ;
     all_scans( all_scans > 3500 * mm_conversion ) = 0                           ;
     all_scans( all_scans < 6  ) = 0                                             ;
@@ -39,17 +54,17 @@ if ~exist( 'xlims' , 'var' )
     all_y           = all_scans .* all_y_weight                                 ;
     
     xlims           = 1.2 * [ mode( min( all_x , [] , 2 ) )                     ...
-        mode( max( all_x , [] , 2 ) ) ]
-    xlims           = 1.1 * mode( max( abs( all_x ) , [] , 2 ) ) * [ -1 1 ]
+                              mode( max( all_x , [] , 2 ) ) ]                   ;
+    xlims           = 1.1 * mode( max( abs( all_x ) , [] , 2 ) ) * [ -1 1 ]     ;
     ylims           = [ 1.5 1.7 ] .* [ mode( min( all_y , [] , 2 ) )            ...
-        mode( max( all_y , [] , 2 ) ) ]
-    ylims           = [ -24 24 ]                                                ;
+                                       mode( max( all_y , [] , 2 ) ) ]          ;
+    ylims           = pipe_in * 1.5 * [ -1 1 ]                                  ;
 end
 
-z_grid      = meshgrid( 1:size( all_x , 1 ) , 1:size( all_x , 2 ) )'            ;
+% z_grid      = meshgrid( 1:size( all_x , 1 ) , 1:size( all_x , 2 ) )'            ;
 
 h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
-h.scan      = subplot( 1 , 4 , 1:2 )
+h.scan      = subplot( 4 , 1 , 1:3 )
 h.raw_p     = plot( 0 , 0 , 'r' ,                                               ...
                             'LineSmoothing' , 'on' ,                            ...
                             'LineWidth' , 2                                     )
@@ -57,36 +72,50 @@ hold on
 med_scan    = nanmedian( all_scans )                                            ;
 h.med       = plot( med_scan .* x_weight  , med_scan .* y_weight , 'c--' ,   	...
                             'LineSmoothing' , 'on' ,                            ...
-                            'LineWidth' , 2                                     )                        
+                            'LineWidth' , 5 ,                                   ...
+                            'Marker' , '.' ,                                    ...
+                            'LineStyle' , '-' )                         
                         
 hold on 
 h.fit_p     = plot( 0 , 0 , 'g' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
-h.circle    = plot( 0 , 0 , 'y' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
-h.template  = plot( 24*cosd( 0:360 ) ,                                          ...
-                    24*sind( 0:360 ),                                           ...
-                    'Color' , 0.6 * [ 1 1 1 ] ,                                 ...
+h.circle    = plot( 0 , 0 , 'y' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 , 'Marker' , '.' , 'LineStyle' , 'none' ) 
+h.template  = plot( pipe_in*cosd( 0 : 5 : 360 ) ,                               ...
+                    pipe_in*sind( 0 : 5 : 360 ),                             	...
+                    'Color' , 'm' ,                                             ...
                     'LineStyle' , '-.' ,                                    	...
                     'LineSmoothing' , 'on' ,                                    ...
-                    'LineWidth' , 2 )    
+                    'LineWidth' , 2 ,                                           ...
+                    'Marker' , 'o' ,                                            ...
+                    'LineStyle' , 'none' )    
 plot( 100 * [ -1 1 ] , [ 0 0 ] , 'Color' , [ 0 0 1 ] , 'LineSmoothing' , 'on' )
 plot( [ 0 0 ] , 100 * [ -1 1 ] , 'Color' , [ 0 0 1 ] , 'LineSmoothing' , 'on' )
 axis equal
 grid on
 xlabel( 'Inches' )
 ylabel( 'Inches' )
-set( gcf, 'Units' , 'Normalized' )
-xlim( xlims )
-ylim( [ -26 26  ] ) 
+file_title  = urg_file                  ;
+file_title( file_title == '_' ) = '-'   ;
+title( file_title  )
+set( gcf, 'Units' , 'Normalized' , 'Numbertitle' , 'Off' , 'Name' , [ 'Fit of Lidar to Pipe ' urg_file ] )
+xlim( pipe_in * [ -1 1 ] + [ -2 2 ] )
+ylim( pipe_in * [ -1 1 ] + [ -2 2 ] )
 legend( { 'Raw Noisy Data' ,            ...
           'Median Filtered' ,           ...
           'Shifted',                    ...
           'Pipe Fit' ,                  ...
-          'Pipe Template' } )           ;
+          'Pipe Template' } ,           ...
+          'Location' ,                  ...
+          'Best' )          ;
 
-h.fit       = subplot( 1 , 4 , 3:4 )                                              ;
-h.red_filt 	= plot( 0 , 0 , 'r+' ,   'LineSmoothing' , 'on' ,                 	...
+h.fit       = subplot( 4 , 1 , 4 )                                              ;
+
+h.red_filt 	= plot( 0 , 0 , 'r+' , 	'LineSmoothing' , 'on' ,                 	...
                                     'MarkerSize' , 3 ,                          ...
                                     'LineWidth' , 2 )                           ;
+hold on                                
+h.bad_filt  = plot( 0 , 0 , 'bx' ,	'LineSmoothing' , 'on' ,                 	...
+                                    'MarkerSize' , 3 ,                          ...
+                                    'LineWidth' , 2 )                           ;                              
 hold on 
 h.plot4     = plot( 0 , 0 , 'y' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
 
@@ -94,51 +123,66 @@ h.fit_axes  = ancestor( h.red_filt , 'Axes' )                                   
 h.min_mark  = scatter( 0 , 0 , 'o', 'MarkerEdgeColor' , 'b' ,                   ...
                                     'MarkerFaceColor' , [ 0 0.5 0.5 ] ,         ...
                                     'LineWidth' , 3 )                           ;
+set( h.fit , 'XDir' , 'reverse' )                                
                                                                
 % axis equal
 grid on
-xlabel( 'Degrees, -45 : 225' )
-ylabel( 'Inches' )
+xlabel( '\theta, Degrees, -45 : 225' )
+ylabel( '\rho, Inches' )
 set( gcf, 'Units' , 'Normalized' )
 xlim( [ -45 225 ] )
-ylim( [ 10 22 ] )
-all_args        = { all_x , all_y , z_grid , 'EdgeColor' , 'none' }         ;
+disp( 'Calculating Quantiles for Y-Limits' )
+quant_tol       = 0.06  
+quants          = quantile( all_scans( : ) , [ quant_tol 1-quant_tol ] )    
+disp( 'Quantiles Calculated.' )
+ylim( quants + [ -0.5 0.5 ] )
+% all_args        = { all_x , all_y , z_grid , 'EdgeColor' , 'none' }         ;
 set( h.fit_axes , 'XTick' , -60 : 30 : 255 )
-set( h.singlefig , 'OuterPosition' ,  [ 0.5000     0.0    0.5000    1 ] )
-
+set( h.singlefig , 'OuterPosition' , [0.99,-0.158,0.5708,1.7925] )
+legend( { 'Included Points' , 'Excluded Points' , 'Parabolic Fit Curve' , 'Parabola Vertex' } )
 drawnow
 last_time       = tic                                                       ;
 ifp             = urg_struct(1).header.scanMsec * 1e-3                      ;
 num_scans       = numel( urg_struct )                                       ;
-desired_scans   = 17000 : 18000                                             ;
+fixed_scan      = 79770         
+% desired_scans   = fixed_scan - 50 : fixed_scan                              ;
+desired_scans   = 9919 : 20015                                              ;
 med_rad         = 7                                                         ;
 med_range       = -med_rad : med_rad                                        ;
-
-
+toggle( h.raw_p )
+toggle( h.med )
+vert            = @() [ ( ( -p( 2 ) / ( 2 * p( 1 ) ) ) / 1 ) * 180 / pi ,       ...
+                           ( polyval( p , -p( 2 ) / ( 2 * p( 1 ) ) ) ) ]        ;
+%%
 for i_scan = desired_scans
     try
-        med_data    = all_scans( med_range + i_scan , : )                       ;
-        med_scan    = nanmedian( med_data )                                     ;
-        med_x       = med_scan .* x_weight                                      ;
-        med_y       = med_scan .* y_weight                                      ;
-        set( h.med , 'XData' , med_x , 'YData' , med_y )                        ;
+%        scan      	= all_scans( i_scan , : )                                   ;
+        raw_scan 	= all_scans( i_scan , : )                               	;
         
-        %     scan       	= all_scans( i_scan , : )                                   ;
-        scan        = all_scans( i_scan , : )                               	;
+        med_data    = all_scans( med_range + i_scan , : )                       ;
+        med_scan    = nanmedian( med_data )                                     ;                      
+        scan        = med_scan                                                  ;
         pipe_fit                                                                ;
-        flat_fit    = fit_curve - min( fit_curve )                              ;
-        x_scan      = scan .* x_weight                                          ;
-        y_scan      = scan .* y_weight                                          ;
-        set( h.raw_p, 'XData' , x_scan , 'YData' , y_scan  )                    ;
-        set( h.red_filt, 'XData' , angles( fit_range ) , 'YData' , scan( fit_range )  )                      ;
         last_time   = tic                                                       ;
-        title( sprintf( 'Timestamp %d, %s, scan %d of %d' ,                     ...
+        title( sprintf( 'Timestamp %d, %s, scan %d of %d\nAverage Diameter:%0.2f' ,                     ...
                urg_struct( i_scan ).timeStamp ,                                 ...
                urg_struct( i_scan ).dateString ,                                ...
                i_scan ,                                                         ...
-               num_scans ) )
+               num_scans ,                                                      ...
+               p( 3 ) ) )                                                    ;
+%         if isfield( h , 'polar')
+%             try
+%             delete( h.polar )
+%             catch err2
+%             end
+%         end
+%         h.polar     = polar( all_angles , scan )                                ;
+        
         drawnow
+%         pause( 0.05 )
+
     catch err
+        break
         rethrow( err )
     end
 end

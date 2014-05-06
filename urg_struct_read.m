@@ -5,9 +5,9 @@ function urg_struct = urg_struct_read( fid )
     field_cell          = textscan( fid , '%s' ,'CollectOutput' , true , 'CommentStyle' , { '[' , ']' } , 'BufSize' , 100000 )   ;    
     field_string        = field_cell{ 1 }                                                                   ;
     if strcmp( field_cell{ 1 }{ 3 }( 3 ) , ':' )
-        temp_cols           = reshape( field_string  , 4 , [] )'
-        temp_cols( : , 2 )  = []
-        cols            = temp_cols 
+        temp_cols           = reshape( field_string  , 4 , [] )'                                            ;
+        temp_cols( : , 2 )  = []                                                                            ;
+        cols                = temp_cols                                                                     ;
     else
         cols                = reshape( field_string  , 3 , [] )'                                         	;
     end

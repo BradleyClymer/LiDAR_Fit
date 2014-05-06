@@ -5,13 +5,10 @@ bad_fit         = abs( fit_diff ) > accepted_diff                               
 vertex          = calc_vertex( p )
 % fit_range       = fit_range & ~bad_fit                                          ;
 if exist( 'vertex' , 'var' )
-    bounds.min  = bounds.min - ( 90 - vertex( 1 )  )                         	;
-    bounds.max  = bounds.max - ( 90 - vertex( 1 )  )                            ;
+    bounds.min  = bounds.min + ( 90 - vertex( 1 )  )                         	;
+    bounds.max  = bounds.max + ( 90 - vertex( 1 )  )                            ;
 end
-bounds
-bounds.max - bounds.min
 fit_range       = ~isnan( scan ) &                                              ...
-                  ~bad_fit &                                                    ...
                  ( angles_deg > ( bounds.min + angle_offset ) ) &               ...
                    angles_deg < ( bounds.max - angle_offset )               	;   % total angle range to fit
 % 
@@ -29,7 +26,6 @@ fit_range       = ~isnan( scan ) &                                              
 
 p               = polyfit( all_angles( fit_range ) , scan( fit_range ) , fit_order )    ;
 fit_curve       = polyval( p , all_angles( : ) )'                               ;
-vertex          = calc_vertex( p )                  
 % [ x , y ]       = pol2cart( all_angles( fit_range ) , scan( fit_range ) )       ;
 % mean( x )       
 
