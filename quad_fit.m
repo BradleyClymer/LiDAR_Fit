@@ -1,68 +1,40 @@
-diff_sign       = -sign( accepted_diff - 1 )                                     ;
-% parab_order     = 3                                                             ;
+diff_sign       = -sign( accepted_diff - 1 )                                                ;
 if exist( 'vertex' , 'var' )
-    bounds.min  = 0 - ( 90 - vertex( 1 )  ) - angle_offset                      ;                     	
-    bounds.max  = 180 - ( 90 - vertex( 1 )  ) + angle_offset                    ;
-    bounds.range= bounds.max - bounds.min                                       
+    cv                          = vertex( i_scan , 1 )                                      ;
+    bounds( i_scan , : ).min  = 0 - ( 90 - cv  ) - angle_offset                             ;                     	
+    bounds( i_scan , : ).max  = 180 - ( 90 - cv  ) + angle_offset                           ;
+    bounds( i_scan , : ).range= bounds( i_scan , : ).max - bounds( i_scan , : ).min         ; 
+    fprintf( 'Bound Range: %i°\n' , bounds( i_scan , : ).range )                             ;
 end
 
 for i_squeeze = 1 : parab_order
-p               = polyfit( all_angles( fit_range ) ,                            ...
-                           all_med( i_scan , fit_range ) ,                      ...
-                           fit_order )                                          ;
-fit_curve       = polyval( p , all_angles( : ) )'                               ;
-fit_diff        = fit_curve - all_med( i_scan , : )                             ;
-diff_exp        = diff_sign * i_squeeze                                         
-bad_fit         = abs( fit_diff ) > accepted_diff ^ diff_exp                    ;
-vertex          = calc_vertex( p )
-fit_range       = fit_range & ~bad_fit                                          ;
-end
+p( i_scan , : )             = polyfit( angles_rad( fit_range( i_scan , : ) ) ,           	...
+                                       all_med( i_scan , fit_range( i_scan , : ) ) ,        ...
+                                       fit_order )                                          ;
+fit_curve( i_scan , : )  	= polyval( p( i_scan , : ) , angles_rad( : ) )'                 ;
+fx                          = all_x_weight( i_scan , : ) .* fit_curve( i_scan , : )      	;
+xd                          = all_x_med( i_scan , : ) - fx                                  ;
+fy                          = all_y_weight( i_scan , : ) .* fit_curve( i_scan , : )         ;
+yd                          = all_y_med( i_scan , : ) - fy                                  ;
+% fit_diff                    = fit_curve( i_scan , : ) - all_med( i_scan , : )               ;                 
+fit_diff                    = ( xd .^ 2 + yd .^ 2 ) .^ 0.5                              	;
+% diff_exp                    = diff_sign * i_squeeze                                         ;                                 
+bad_fit                     = abs( fit_diff ) > accepted_diff / i_squeeze                   ;
+in_bounds                   = ( angles_deg > ( bounds( i_scan ).min ) &                     ...
+                              ( angles_deg < ( bounds( i_scan ).max ) ) )                   ;
+vertex( i_scan , : )        = calc_vertex( p( i_scan , : ) )                                ;
+fit_range( i_scan , : ) 	= fit_range( i_scan , : ) & ~bad_fit & in_bounds                ;
+fit_num                     = find( fit_range( i_scan , : ) ) /4                            ;
+[ min( fit_num ) max( fit_num ) ] 
 
-% fit_range       = ~isnan( all_med( i_scan , : ) ) &                             ...
-%                   ~bad_fit &                                                    ...
-%                  ( angles_deg > ( bounds.min  ) ) &                             ...
-%                    angles_deg < ( bounds.max  )                                 ;   % total angle range to fit
-% 
-%          
-% % 
-% p               = polyfit( all_angles( fit_range ) ,                            ...
-%                            all_med( i_scan , fit_range ) ,                      ...
-%                            fit_order )                                          ;
-% fit_curve       = polyval( p , all_angles( : ) )'                               ;
-% fit_diff        = fit_curve - all_med( i_scan , : )                             ;
-% bad_fit         = abs( fit_diff ) > accepted_diff.^2                            ;
-% fit_range       = fit_range & ~bad_fit                                          ;
-% % 
-% % p               = polyfit( all_angles( fit_range ) , scan( fit_range ) , fit_order )    ;
-% % fit_curve       = polyval( p , all_angles( : ) )'                               ;
-% % fit_diff        = fit_curve - scan                                           	;
-% % bad_fit         = abs( fit_diff ) > accepted_diff.^3                            ;
-% % fit_range       = fit_range & ~bad_fit                                          ;
-% 
-% p               = polyfit( all_angles( fit_range ) ,                            ...
-%                            all_med( i_scan , fit_range ) ,                      ...
-%                            fit_order )                                          ;
-% fit_curve       = polyval( p , all_angles( : ) )'                               ;
-% fit_diff        = fit_curve - all_med( i_scan , : )                             ;
-% bad_fit         = abs( fit_diff ) > accepted_diff.^3                            ;
-% fit_range       = fit_range & ~bad_fit                                          ;
-% vertex          = calc_vertex( p )                  
-fit_cell        = { ( ~isnan( all_med( i_scan , : ) ) +.2 ) ;
-                    ( ~bad_fit +.4 ) ;
-                    ( ( angles_deg > ( bounds.min  ) ) +.6 ) ;
-                    ( ( angles_deg < ( bounds.max  ) ) + 0.8 ) }                ;
-set( h.logic_plot , { 'YData' } , fit_cell )                      
-%   This needs to be modified: positive 2nd degree coefficient means above
-%   the centerline, negative means below; in the 'below' case, special
-%   handling needs to be considered
-% 
-% quadrant        = round( vertex( 1 ) / 90 ) + 1                                 ;
-% opposite        = round( abs( 180 - vertex( 1 ) ) )                             ;
-% opposite_ind    = find( round( angles_deg ) - opposite == 0 , 1 )               ;
-% if isempty( opposite_ind )
-%     opposite_ind = 1080 / 2
-%     pause
-% end
-% opposite_rad    = fit_curve( opposite_ind )                                     ;
-% diam            = vertex( 2 ) + opposite_rad                                    ;
-% pause( 0.3 )                
+end
+                
+fit_cell{ i_scan }          = { ( ~isnan( all_med( i_scan , : ) ) +.2 ) ;
+                                ( ~bad_fit +.4 ) ;
+                                ( ( angles_deg > ( bounds( i_scan , : ).min  ) ) +.6 ) ;
+                                ( ( angles_deg < ( bounds( i_scan , : ).max  ) ) + 0.8 ) }	;
+                            
+try
+    set( h.logic_plot , { 'YData' } , fit_cell{ i_scan } )                      
+catch
+end

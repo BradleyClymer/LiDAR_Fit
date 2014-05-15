@@ -1,77 +1,77 @@
 clc
-raw_x           = raw_scan .* x_weight                                       	;
-raw_y           = raw_scan .* y_weight                                      	;
-accepted_diff   = 0.5                                                           ;   % inches
-all_angles      = angles_deg  * pi / 180                                    	;   % -45 : 225 in radians
-bounds.min      = 0 + angle_offset                                          	;
-bounds.max      = 180 - angle_offset                                        	;
-angle_offset    = -10                                                           ;   % angles to consider outside of top hemisphere
-fit_range       = ~isnan( all_med( i_scan , : ) ) &                             ...
-                   angles_deg > bounds.min &                                    ...
-                   angles_deg < bounds.max                                      ;   % total angle range to fit
+if run_calculations
+bounds( i_scan , : ).min 	= 0 - angle_offset                                                      ;
+bounds( i_scan , : ).max	= 180 + angle_offset                                                    ;
+fit_range( i_scan , : ) 	= ~isnan( all_med( i_scan , : ) ) &                                     ...
+                                      angles_deg > bounds( i_scan , : ).min &                       ...
+                                      angles_deg < bounds( i_scan , : ).max                         ;   % total angle range to fit
 
-fit_order       = 2                                                             ;               
-quad_fit                                                                            % parabolic fit
-min_fit         = vertex( 2 )                                                   ;   
-fit_new_deg   	= vertex( 1 ) - 90                                              ;   % mean( all_angles( fit_curve == min_fit ) ) + 0*pi/2           ;       
-try
-    par_rec( 1 , : )= CircleFitByTaubin( [  all_x_med( i_scan , fit_range )'      	...
-                                            all_y_med( i_scan , fit_range )' ] )                  % [ x y R ] output
-    par_rec         = circshift( par_rec , [ -1 0 ] )                               ;
-    par             = sum( par_rec .* filter_mat )                                  ;
-                      axes( h.scan )                                                ;
-    if ~exist( 'fit_center' , 'var' ) || ~ishandle( fit_center )                 
-        fit_center      = scatter( -par( 1 ) , -par( 2 ) )                       	;
-%         fit_circle      = plot( circle_x , circle_y , 'c--' )                     	;
-    else 
-        set( fit_center , 'XData' , -par( 1 ) , 'YData' , -par( 2 ) )               ;
-%         set( fit_circle , 'XData' , circle_x , 'YData' , circle_y )                 ;
-    end
-catch err
-    clear
-    disp( 'Error, Dawg.' )
-    disp( err )
-    pause
-end                              
-                                    
-[ a , b , R ]   = deal( par( 1 ) , par( 2 ) , par( 3 ) )                            ;
-                 
-med_x           = fit_curve .* x_weight - 0*par( 1 )                                ;
-med_y           = fit_curve .* y_weight - 0*par( 2 )                                ;
-flat_fit        = fit_curve - min( fit_curve )                                      ;
-shift_deg       = ( 90 - vertex( 1 ) )                                              ;
-shift_ind       = round( shift_deg * 4 )                                            ;
-circ_shift      = circshift(all_med( i_scan ), -0 , 2 )                                        ;
-shift_angles    = circshift( aux_deg , 0 , 2 )                                      ;
-shift_angles( 1082:end ) = []                                                       ;
-curr_avg        = sprintf( 'Raw Average: %0.2f' , nanmean( raw_scan ) )           
+             
+p( i_scan , : )                   = polyfit( angles_rad( fit_range( i_scan , : ) ) ,                ...
+                                             all_med( i_scan , fit_range( i_scan , : ) ) ,          ...
+                                             fit_order )                                            ;
+vertex( i_scan , : )              = calc_vertex( p( i_scan , : ) )                                  ;                       
+quad_fit                                                                                                % parabolic fit
+min_fit                 = vertex( i_scan, 2 )                                                       ;   
+fit_new_deg             = vertex( i_scan, 1 ) - 90                                                  ;   % mean( all_angles( fit_curve == min_fit ) ) + 0*pi/2           ;       
+par_rec                 = circshift( par_rec , [ -1 0 ] )                                           ;
+par_rec( end , : )      = CircleFitByTaubin( [  all_x_med( i_scan , fit_range( i_scan , : ) )'      ...
+                                                all_y_med( i_scan , fit_range( i_scan , : ) )' ] )	; % [ x y R ] output
+par( i_scan, : )        = sum( par_rec .* filter_mat )                                              ;
+                          axes( h.scan )                                                            ;
 
-% circ_shift( [ 1 end ] ) = 0                                                         ;
-% x_scan          = circ_shift .* cosd( shift_angles ) - par( 1 )                     ;
-% y_scan          = circ_shift .* sind( shift_angles ) - par( 2 )                     ;
-x_scan          = all_x_med( i_scan , : ) - par( 1 )                                ;
-y_scan          = all_y_med( i_scan , : ) - par( 2 )                                ;
-[ th( i_scan , : ) , rho( i_scan , : ) ] =                                      	...
-                  cart2pol( x_scan , y_scan )                                       ;
-fit_title       = sprintf( [ 'Fit Polynomial: %0.3f*\\theta^2 + %0.2f*\\theta + %0.2f'  ...
-                             '\nVertex: %0.2f°, %0.2f"' ] ,                         ...
-                             p , vertex - [ 90 0 ] ) 
-                  set( get( h.fit, 'Title' ) , 'String' , fit_title )
-                  
-% x_fit           = x_scan - par_rec( 1 )                                             ;
-% y_fit           = y_scan - par_rec( 2 )                                             ;
-% toggle( h.med )
-%     set( h.med ,    'XData' , med_x , 'YData' , med_y )                                 ;   %   Cyan Fat Partial Circle
-    set( h.raw_p,   'XData' , raw_x , 'YData' , raw_y  )                                ;   %   Red Fat Line
-    set( h.fit_p ,  'XData' , x_scan ,'YData' , y_scan  )                               ;   %   Green Fat Line
-    set( h.circle , 'XData' , par( 3 ) * cosd( 0 : 360 ) ,                              ...
-                    'YData' , par( 3 ) * sind( 0 : 360 ) )                              ;   %   Yellow Centered Best-Fit Circle
-    
-    set( h.red_filt, 'XData' , angles_deg( fit_range ) ,                                ...
-                     'YData' , all_med( i_scan , fit_range )  )                         ;   %   Red fit scatter
-    set( h.bad_filt, 'XData' , angles_deg( ~fit_range ) ,                               ...
-                     'YData' , all_med( i_scan , ~fit_range )  )                        ;   %   Bad fit scatter
-    set( h.min_mark,'XData' , vertex( 1 ) , 'YData' , vertex( 2 ) )                     ;   %   Parabola Vertex
- 	set( h.plot4 ,  'XData' , angles_deg( : ) ,   'YData' , fit_curve )                 ;   %   Fit Parabola
-    set( h.bounds , 'XData' , [ bounds.min bounds.min nan bounds.max bounds.max ] ,     ...
-                    'YData' , [ -100       100        nan -100       100        ] )   	;
+x_scan( i_scan , : )    = all_x_med( i_scan , : ) - par( i_scan, 1 )                                ;
+y_scan( i_scan , : )    = all_y_med( i_scan , : ) - par( i_scan, 2 ) + pipe_in - par( i_scan ,3)    ;
+out_c( i_scan , : )     = ( ( x_scan( i_scan , : ) ) .^2 + ( y_scan( i_scan, : ) ) .^2 ) .^0.5      ;
+diff_c( i_scan , : )    = out_c( i_scan , : ) - pipe_in                                             ;
+pos_patch               = sign( diff_c( i_scan , : ) ) > 0                                          ;
+% figure( 4 )
+diff_locs               = diff( [ pos_patch( 1 ) , pos_patch ] )                                    ;
+starts                  = diff_locs == 1                                                            ;
+start_inds              = find( starts )                                                            ;
+ends                    = diff_locs == -1                                                           ;
+end_inds                = find( ends )                                                              ;
+                        [ diff_c( i_scan , : )' ( 1 : 1081 )' ]                                     ;
+valid_inds              = ( end_inds - start_inds > 2 )                                             ;
+diff_inds               = vertcat( start_inds( valid_inds ) , end_inds( valid_inds ) )              ;
+diffs                   = diff( diff_inds )                                                         ;
+% diff_inds( [ diffs < 2 ; diffs < 2 ] ) = []
+m                       = max( diffs )                                                              ;
+[ shape_x , shape_y ]   = deal( nan( 2*( m + 1 ) , numel( diffs ) ) )                               ;
+
+for i_shape = 1 : numel( diffs )
+    shape_x( 1 : ( 2*( diffs( i_shape )+1 ) ) , i_shape ) = vertcat( x_scan( i_scan, ( diff_inds( 1 , i_shape ) : diff_inds( 2 , i_shape ) ) )' ,    ...
+                                                                     fliplr( circle_template.x( diff_inds( 1 , i_shape ) : diff_inds( 2 , i_shape ) )' ) ) 
+    shape_y( 1 : ( 2*( diffs( i_shape )+1 ) ) , i_shape ) = vertcat( y_scan( i_scan, ( diff_inds( 1 , i_shape ) : diff_inds( 2 , i_shape ) ) )' ,    ...
+                                                                     fliplr( circle_template.y( diff_inds( 1 , i_shape ) : diff_inds( 2 , i_shape ) )' ) )
+end
+% shape_x 
+% fun                     = @( s , e , m ) vertcat( linspace( e , s , e - s + 1 )' , nan( m - e + s , 1 ) )
+% m = 10
+% bsxfun( fun , start_inds , end_inds )
+% fun( start_inds , end_inds )
+% diff_c( i_scan , find( starts ) : find( ends ) )'
+% plot( [ ( pos_patch' + 0.2 ) , ( diff_locs' - 0.0 ) , ( starts' -0.6 ) , ( ends' - 0.8 )  ] , 'LineSmoothing' , 'on' )
+% legend( { 'pos patch' , 'diff locs' , 'starts' , 'ends' } )
+
+% patch_x_cart            = [ x_scan( i_scan , pos_patch ) fliplr( inner_ring_x( pos_patch ) ) ]      ;
+% patch_y_cart            = [ y_scan( i_scan , pos_patch ) fliplr( inner_ring_y( pos_patch ) ) ]      ;
+patch_x_cart            = shape_x      ;
+patch_y_cart            = shape_y      ;
+fit_title{ i_scan }     = sprintf( [ 'Fit Polynomial: %0.3f*\\theta^2 + %0.2f*\\theta + %0.2f'      ...
+                                     ' -- Vertex: %0.2f°, %0.2f"' ] ,                                 ...
+                                     p( i_scan , : ) , vertex( i_scan , : ) - [ 90 0 ] )            ;
+                                 
+yes_angles              = angles_deg( fit_range( i_scan , : ) )                                     ;
+patch_x                 = reshape( [ nan( 1 , numel( yes_angles ) ) ;                               ...
+                                                     yes_angles ;                                   ...
+                                                     yes_angles ] ,                                 ...
+                                    1 , [] )                                                        ;
+                                
+patch_y                 = repmat( [ nan 0 2 ] , 1 , numel( yes_angles )  )                          ;
+patch_z                 = -1 * ones( size( patch_y ) )                                              ;
+end
+
+if disp_plots
+	update_plots
+end                
