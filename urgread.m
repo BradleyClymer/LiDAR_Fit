@@ -30,24 +30,25 @@ angles_deg  	= linspace( -45 , 225 , numel( urg_struct( 1 ).scan ) )     ;   % a
 x_weight        = cosd( angles_deg )                                        ;   % pre-calculate the weights of the angles
 y_weight        = sind( angles_deg )                                        ;
 
-% bounds( i_scan ).min      = 0                                                         ;
-% bounds.max      = 180                                                       ;
+% bounds( i_scan ).min      = 0                                             ;
+% bounds.max      = 180                                                     ;
 
 angles_rad      = angles_deg  * pi / 180                                    ;   % -45 : 225 in radians
-angle_offset    = +20                                                        ;
+angle_offset    = +20                                                       ;
 
 pipe_diameter   = 48                                                        ;
 pipe_in         = pipe_diameter / 2                                         ;   % pipe radius in inches
+pipe_in_sq      = pipe_in ^ 2                                               ;
 accepted_diff   = .025 * pipe_diameter                                      ;   % inches
 
 pipe_mm         = pipe_in / mm_conversion                                   ;   %  '      '     '  mm
-inner_tol       = .95 * pipe_in                                              ;
+inner_tol       = .95 * pipe_in                                             ;
 mm_rad          = pipe_mm / 2                                               ;   % pipe radius in mm
 vertex( 1 )     = 90                                                        ;
 vertex( 2 )     = pipe_in                                                   ;
 
 
-filter_order    = 20                                                      	 ;   % order of the median filter
+filter_order    = 20                                                        ;   % order of the median filter
 filter_roll     = 3                                                         ;   % filter roll-off rate
 filter_raw      = exp( filter_roll * ( filter_order : -1 : 1 )' /filter_order  )       ;   % generate some filter coefficients
 filter_new      = filter_raw / ( sum( filter_raw , 2 ) / 1 )                ;   % normalize coefficients
@@ -178,7 +179,7 @@ h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
                   'Best' )          ;
         end
         
-    h.fit       = subplot( 1 , 4 , 4 )                                              ;
+    h.fit       = subplot( 2 , 4 , 4 )                                              ;
 
         h.bad_filt  = plot( 0 , 0 , 'bx' ,	'LineSmoothing' , 'on' ,                 	...
                                             'MarkerSize' , 3 ,                          ...
@@ -236,7 +237,11 @@ h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
         toggle( h.circle ) 
         % vert            = @() [ ( ( -p( 2 ) / ( 2 * p( 1 ) ) ) / 1 ) * 180 / pi ,       ...
         %                            ( polyval( p , -p( 2 ) / ( 2 * p( 1 ) ) ) ) ]        ;
-
+h.corrosion         = subplot( 2 , 4 , 8 )                                          ;
+h.corr              = plot( 1 , 1 , 'Color' , 'r' , 'LineSmoothing' , 'on' , 'MarkerEdgeColor' , [ 1 0 0.2 ] , 'LineStyle' , 'none' , 'Marker' , '.' )     ;
+ylim( [ 0 5 ] )
+grid on        
+title( 'Corrosion Area, in^2' )
 h.logic             = figure( 'Position' , [ 316   353   576   512 ] )              ;
     h.logic_plot        = plot( angles_deg , repmat( x_weight , 4 , 1 ) , '.'  )        ;
     % set( h.logic_plot , { 'Color' } , { 'none' , 'none' , 'none' , 'none' }' )
@@ -252,10 +257,10 @@ h.logic             = figure( 'Position' , [ 316   353   576   512 ] )          
     inner_ring_y            = pipe_in * y_weight                                        ;           
 axes( h.scan )
     hold on
-    h.patch                 = patch( inner_ring_x , inner_ring_y , [ 1 1 0 ] )    ;
-    set( h.patch , 'EdgeColor' , 'none' )
+%     h.patch                 = patch( inner_ring_x , inner_ring_y , [ 1 1 0 ] )    ;
+%     set( h.patch , 'EdgeColor' , 'none' )
 
-desired_scans   = 1016 : 1074                                                    ;
+desired_scans   = 1016 : 1374                                                    ;
 
 for parab_order = 3
     if parab_order

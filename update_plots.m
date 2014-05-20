@@ -20,11 +20,16 @@ set( h.bad_filt,    'XData' , angles_deg( ~fit_range( i_scan , : ) ) ,          
                     
 set( h.red_filt,    'XData' , angles_deg( fit_range( i_scan , : ) ) ,                       ...
                     'YData' , all_med( i_scan , fit_range( i_scan , : ) )  )                ;   %   Red fit scatter
-
+try
 set( h.min_mark,    'XData' , vertex( i_scan, 1 ) , 'YData' , vertex( i_scan, 2 ) )         ;   %   Parabola Vertex
+catch
+end
 set( h.plot4 ,      'XData' , angles_deg( : ) ,   'YData' , fit_curve( i_scan , : ) )       ;   %   Fit Parabola
 set( h.bounds ,     'XData' , [ bounds( i_scan ).min bounds( i_scan ).min nan bounds( i_scan ).max bounds( i_scan ).max ] ,         ...
                     'YData' , [ -100       100        nan -100       100        ] )         ;    
                 
-                
+try                
 set( h.patch ,      'XData' , patch_x_cart , 'YData' , patch_y_cart )
+catch
+    disp( 'No patch.' )
+end

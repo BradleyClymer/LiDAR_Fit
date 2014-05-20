@@ -22,42 +22,63 @@ par( i_scan, : )        = sum( par_rec .* filter_mat )                          
 
 x_scan( i_scan , : )    = all_x_med( i_scan , : ) - par( i_scan, 1 )                                ;
 y_scan( i_scan , : )    = all_y_med( i_scan , : ) - par( i_scan, 2 ) + pipe_in - par( i_scan ,3)    ;
+sign_correction         = 180 * ( x_scan( i_scan , : ) < 0 )                                        ;
 out_c( i_scan , : )     = ( ( x_scan( i_scan , : ) ) .^2 + ( y_scan( i_scan, : ) ) .^2 ) .^0.5      ;
+out_t( i_scan , : )     = atand( ( y_scan( i_scan, : ) ) ./ ( x_scan( i_scan , : ) ) ) +            ...
+                          sign_correction                                                           ;
+d_t                     = diff( vertcat( circshift( out_t( i_scan , : ) , +1 , 2 ) ,              	...
+                                         circshift( out_t( i_scan , : ) , -1 , 2 ) ) ) / 360        ;                
 diff_c( i_scan , : )    = out_c( i_scan , : ) - pipe_in                                             ;
 pos_patch               = sign( diff_c( i_scan , : ) ) > 0                                          ;
 % figure( 4 )
 diff_locs               = diff( [ pos_patch( 1 ) , pos_patch ] )                                    ;
 starts                  = diff_locs == 1                                                            ;
-start_inds              = find( starts )                                                            ;
+start_inds              = find( starts ) +0                                                           ;
 ends                    = diff_locs == -1                                                           ;
-end_inds                = find( ends )                                                              ;
-                        [ diff_c( i_scan , : )' ( 1 : 1081 )' ]                                     ;
-valid_inds              = ( end_inds - start_inds > 2 )                                             ;
+end_inds                = find( ends ) -0                                                             ;
+valid_inds              = ( end_inds - start_inds > 0 )                                             ;
 diff_inds               = vertcat( start_inds( valid_inds ) , end_inds( valid_inds ) )              ;
 diffs                   = diff( diff_inds )                                                         ;
-% diff_inds( [ diffs < 2 ; diffs < 2 ] ) = []
 m                       = max( diffs )                                                              ;
 [ shape_x , shape_y ]   = deal( nan( 2*( m + 1 ) , numel( diffs ) ) )                               ;
+corrosion( i_scan )     = nansum( .5 * d_t(          pos_patch ) .*                                ...
+                            	(    out_c( i_scan , pos_patch ) .^2 - pipe_in_sq ) )              
+corr_bounds           	= [ max( i_scan-20 , 1 ) , min( i_scan+20 , numel( corrosion ) ) ]       	;
+corr_range              = corr_bounds( 1 ) : corr_bounds( 2 )                                       ;
+set( h.corr ,             'XData' , corr_range ,                                                    ...
+                          'YData' , corrosion( corr_range )  )                                     ;
+                      
+set( h.corrosion , 'XLim' , corr_bounds )                                                    ;
+cmap                    = flipud( jet( numel( diffs ) ) )                                           ;
+try
+%     delete( p_s( : ) )
+    delete( findobj( gca , 'type' , 'patch' ) )
+    delete( p_s( : ).top_scatter )
+    disp( 'Top Deleted.' )
+    delete( p_s( : ).bottom_scatter ) 
+    disp( 'Bottom Deleted.' )
+catch
+    disp( 'failed.' )
+end 
 
 for i_shape = 1 : numel( diffs )
-    shape_x( 1 : ( 2*( diffs( i_shape )+1 ) ) , i_shape ) = vertcat( x_scan( i_scan, ( diff_inds( 1 , i_shape ) : diff_inds( 2 , i_shape ) ) )' ,    ...
-                                                                     fliplr( circle_template.x( diff_inds( 1 , i_shape ) : diff_inds( 2 , i_shape ) )' ) ) 
-    shape_y( 1 : ( 2*( diffs( i_shape )+1 ) ) , i_shape ) = vertcat( y_scan( i_scan, ( diff_inds( 1 , i_shape ) : diff_inds( 2 , i_shape ) ) )' ,    ...
-                                                                     fliplr( circle_template.y( diff_inds( 1 , i_shape ) : diff_inds( 2 , i_shape ) )' ) )
+    shape_x( 1 : ( 2*( diffs( i_shape )+1 ) ) , i_shape ) =     vertcat( x_scan( i_scan, ( diff_inds( 1 , i_shape ) : diff_inds( 2 , i_shape ) ) )' ,    ...
+                                                            flipud( cosd( out_t( i_scan, ( diff_inds( 1 , i_shape ) : diff_inds( 2 , i_shape ) ) )' ) ) * pipe_in )     ;
+    shape_y( 1 : ( 2*( diffs( i_shape )+1 ) ) , i_shape ) =     vertcat( y_scan( i_scan, ( diff_inds( 1 , i_shape ) : diff_inds( 2 , i_shape ) ) )' ,    ...            
+                                                            flipud( sind( out_t( i_scan, ( diff_inds( 1 , i_shape ) : diff_inds( 2 , i_shape ) ) )' ) ) * pipe_in )     ;
+    p_s( i_shape )                                        = patch( shape_x( 1 : ( 2*( diffs( i_shape )+1 ) ) , i_shape ) ,                                              ...
+                                                                   shape_y( 1 : ( 2*( diffs( i_shape )+1 ) ) , i_shape ) , [ 1 1 1 ] , 'EdgeColor' , 'none' )           ;
 end
-% shape_x 
-% fun                     = @( s , e , m ) vertcat( linspace( e , s , e - s + 1 )' , nan( m - e + s , 1 ) )
-% m = 10
-% bsxfun( fun , start_inds , end_inds )
-% fun( start_inds , end_inds )
-% diff_c( i_scan , find( starts ) : find( ends ) )'
-% plot( [ ( pos_patch' + 0.2 ) , ( diff_locs' - 0.0 ) , ( starts' -0.6 ) , ( ends' - 0.8 )  ] , 'LineSmoothing' , 'on' )
-% legend( { 'pos patch' , 'diff locs' , 'starts' , 'ends' } )
+% vertices                            = [ shape_x( : ) shape_y( : ) ]                 ;
+% faces                               = 1 : size( vertices , 1 )                      ;
+% faces( isnan( vertices( : , 1 ) ) ) = nan                                           ;
+% faces                               = reshape( faces , size( shape_x ) )'           ;     
+% faces( faces == repmat( max( faces , [] , 2 ) , 1 , size( faces , 2 ) ) ) = faces( : , 1 ) ;
+% faces( 
+% h.patch                             = patch( 'Faces',[ faces faces( : , 2 ) ] ,'Vertices',vertices,'FaceColor','w', 'EdgeColor' , 'w' )      ;
 
-% patch_x_cart            = [ x_scan( i_scan , pos_patch ) fliplr( inner_ring_x( pos_patch ) ) ]      ;
-% patch_y_cart            = [ y_scan( i_scan , pos_patch ) fliplr( inner_ring_y( pos_patch ) ) ]      ;
-patch_x_cart            = shape_x      ;
-patch_y_cart            = shape_y      ;
+% patch_x_cart            = shape_x      ;
+% patch_y_cart            = shape_y      ;
 fit_title{ i_scan }     = sprintf( [ 'Fit Polynomial: %0.3f*\\theta^2 + %0.2f*\\theta + %0.2f'      ...
                                      ' -- Vertex: %0.2f°, %0.2f"' ] ,                                 ...
                                      p( i_scan , : ) , vertex( i_scan , : ) - [ 90 0 ] )            ;
