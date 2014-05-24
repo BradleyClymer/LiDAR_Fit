@@ -5,7 +5,7 @@ else
     set( fit_center , 'XData' , -par( i_scan , 1 ) , 'YData' , -par( i_scan , 2 ) )     ;
 end
     
-set( h.range , 'XData' , patch_x , 'YData' , patch_y , 'ZData' , patch_z )    
+% set( h.range , 'XData' , patch_x , 'YData' , patch_y , 'ZData' , patch_z )    
 set( get( h.fit,    'Title' ) , 'String' , fit_title{ i_scan } )                            ;   %   Parabola Subplot Title
 %   set( h.med ,    'XData' , med_x , 'YData' , med_y )                                     ;   %   Cyan Fat Partial Circle
 set( h.raw_p,       'XData' , data.x( i_scan , : ) , 'YData' , data.y( i_scan , : )  )      ;   %   Red Fat Line

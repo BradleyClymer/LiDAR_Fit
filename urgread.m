@@ -1,9 +1,9 @@
 clc
 close all hidden
 colordef black
-clear
+% clear
 profile on
-urg_file        = 'test.ubh'
+% urg_file        = 'test.ubh'
 if ~exist( 'urg_file' , 'var' )
     [ fn , pn ]	= uigetfile( '*.ubh' , 'Select UrgBenri LiDAR data file' )
     urg_file    = fullfile( pn , fn )
@@ -36,7 +36,7 @@ y_weight        = sind( angles_deg )                                        ;
 angles_rad      = angles_deg  * pi / 180                                    ;   % -45 : 225 in radians
 angle_offset    = +20                                                       ;
 
-pipe_diameter   = 48                                                        ;
+pipe_diameter   = 26                                                        ;
 pipe_in         = pipe_diameter / 2                                         ;   % pipe radius in inches
 pipe_in_sq      = pipe_in ^ 2                                               ;
 accepted_diff   = .025 * pipe_diameter                                      ;   % inches
@@ -48,10 +48,10 @@ vertex( 1 )     = 90                                                        ;
 vertex( 2 )     = pipe_in                                                   ;
 
 
-filter_order    = 20                                                        ;   % order of the median filter
-filter_roll     = 3                                                         ;   % filter roll-off rate
+filter_order    = 5                                                        ;   % order of the median filter
+filter_roll     = -3                                                         ;   % filter roll-off rate
 filter_raw      = exp( filter_roll * ( filter_order : -1 : 1 )' /filter_order  )       ;   % generate some filter coefficients
-filter_new      = filter_raw / ( sum( filter_raw , 2 ) / 1 )                ;   % normalize coefficients
+filter_new      = filter_raw / ( sum( filter_raw , 1 ) / 1 )                ;   % normalize coefficients
 filter_mat      = repmat( filter_new , 1 , 3 )                              ;   % matrix of coefficients
 min_rec         = zeros( numel( filter_order ) , 1 )                        ;   % initialize record of minima
 struct_size_vec = cell2mat( arrayfun( @( x ) size( x.scan ) , urg_struct ,  ...
@@ -66,7 +66,7 @@ fit_curve       = zeros( num_scans, 1081 )                  ;
 vertex          = zeros( num_scans, 2 )                     ;
 fit_range       = logical( zeros( num_scans, 1081 ) )       ;
 
-if 1 % ~exist( 'all_x_med' , 'var' )
+if ~exist( 'all_x_med' , 'var' )
     disp( 'Pre-Processing Data' )
     all_x_weight    = repmat( x_weight , num_scans , 1 )                        ;   % cos( -45 : 0.25 : 1081 )
     all_y_weight    = repmat( y_weight , num_scans , 1 )                        ;   % sin(  '       '     '  )
@@ -140,7 +140,7 @@ h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
                                     'LineStyle' , '-' )                                 ;
 
         hold on 
-        h.fit_p     = plot( 0 , 0 , 'g' , 'LineSmoothing' , 'on' , 'LineWidth' , 0.1 )	;
+        h.fit_p     = plot( 0 , 0 , 'g' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )	;
         h.circle    = plot( 0 , 0 , 'y' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 ,    ...
                                           'Marker' , '.' , 'LineStyle' , 'none' )       ;
                                       
@@ -148,10 +148,10 @@ h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
         circle_template.y     = pipe_in * y_weight                                      ;
         h.template  = plot( circle_template.x ,                                         ...
                             circle_template.y ,                                         ...
-                            'Color' , 'k' ,                                             ...
+                            'Color' , 0.6 * [ 1 1 1 ] ,                                 ...
                             'LineStyle' , '.' ,                                         ...
                             'LineSmoothing' , 'on' ,                                    ...
-                            'LineWidth' , 1 ,                                           ...
+                            'LineWidth' , 2 ,                                           ...
                             'Marker' , 'none' ,                                        	...
                             'LineStyle' , '-' )                                         ;
         plot( 100 * [ -1 1 ] , [ 0 0 ] , 'Color' , [ 0 0 1 ] , 'LineSmoothing' , 'on' )
@@ -238,21 +238,21 @@ h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
         % vert            = @() [ ( ( -p( 2 ) / ( 2 * p( 1 ) ) ) / 1 ) * 180 / pi ,       ...
         %                            ( polyval( p , -p( 2 ) / ( 2 * p( 1 ) ) ) ) ]        ;
 h.corrosion         = subplot( 2 , 4 , 8 )                                          ;
-h.corr              = plot( 1 , 1 , 'Color' , 'r' , 'LineSmoothing' , 'on' , 'MarkerEdgeColor' , [ 1 0 0.2 ] , 'LineStyle' , 'none' , 'Marker' , '.' )     ;
+h.corr              = plot( 1 , 1 , 'Color' , 'r' , 'LineSmoothing' , 'on' , 'MarkerFaceColor' , [ 1 .8 .8 ] , 'MarkerEdgeColor' , 'none' , 'LineStyle' , '-' , 'Marker' , 'o' , 'LineWidth' , 3 )     ;
 ylim( [ 0 5 ] )
 grid on        
 title( 'Corrosion Area, in^2' )
-h.logic             = figure( 'Position' , [ 316   353   576   512 ] )              ;
-    h.logic_plot        = plot( angles_deg , repmat( x_weight , 4 , 1 ) , '.'  )        ;
-    % set( h.logic_plot , { 'Color' } , { 'none' , 'none' , 'none' , 'none' }' )
-
-    set( gca , 'XDir' , 'reverse' )
-    ylim( [ 0 2 ] )
-    hold on
-    grid on
-    h.range             = plot( [ 0 0 nan 1 1 nan 2 2 ] , [ 0 0 nan 1 1 nan 1 1 ] , 'Color' , 0.4 * [ 1 .8 1 ] , 'LineSmoothing' , 'on' )
-
-    legend( { '~isnan' ; 'Not Bad Parabola' ; 'Above Min' ; 'Below Max' } )
+% h.logic             = figure( 'Position' , [ 316   353   576   512 ] )              ;
+%     h.logic_plot        = plot( angles_deg , repmat( x_weight , 4 , 1 ) , '.'  )        ;
+%     % set( h.logic_plot , { 'Color' } , { 'none' , 'none' , 'none' , 'none' }' )
+% 
+%     set( gca , 'XDir' , 'reverse' )
+%     ylim( [ 0 2 ] )
+%     hold on
+%     grid on
+%     h.range             = plot( [ 0 0 nan 1 1 nan 2 2 ] , [ 0 0 nan 1 1 nan 1 1 ] , 'Color' , 0.4 * [ 1 .8 1 ] , 'LineSmoothing' , 'on' )
+% 
+%     legend( { '~isnan' ; 'Not Bad Parabola' ; 'Above Min' ; 'Below Max' } )
     inner_ring_x            = pipe_in * x_weight                                        ;
     inner_ring_y            = pipe_in * y_weight                                        ;           
 axes( h.scan )
@@ -260,20 +260,10 @@ axes( h.scan )
 %     h.patch                 = patch( inner_ring_x , inner_ring_y , [ 1 1 0 ] )    ;
 %     set( h.patch , 'EdgeColor' , 'none' )
 
-desired_scans   = 1016 : 1374                                                    ;
+desired_scans   = ( 1016 : 1674 ) + 3000                                                   ;
+% desired_scans   = 1360
 
-for parab_order = 3
-    if parab_order
-        filter_order    = parab_order + 18 + ~mod( parab_order , 2 )                ;   % order of the median filter
-        filter_roll     = 5                                                         ;   % filter roll-off rate
-        filter_raw      = exp( filter_roll * ( 1 : 1 : filter_order )' /            ...
-                               filter_order  )                                      ;   % generate some filter coefficients
-        filter_new      = filter_raw / ( sum( filter_raw ) / 1 )                    ;   % normalize coefficients
-        filter_mat      = repmat( filter_new , 1 , 3 )                              ;   % matrix of coefficients
-        min_rec         = zeros( numel( filter_order ) , 1 )                        ;   % initialize record of minima
-        par_rec         = repmat( [ x_guess y_guess R_guess ] ,                     ...
-                          size( filter_mat , 1 ) , 1 )                              ;
-    end
+
 for i_scan = desired_scans
 
         raw_scan 	= all_scans( i_scan , : )                               	;
@@ -292,13 +282,3 @@ for i_scan = desired_scans
 %         pause( 0.2 )
 
 end
-pause( 1 )
-end
-% figure
-% plot( diam_rec( : , desired_scans )' , 'LineSmoothing' , 'on' )
-% grid on
-% legend( { '1' , '2' , '3', '4' , '5' , '6' , '7' } )
-
-% 
-
-% profile viewer
