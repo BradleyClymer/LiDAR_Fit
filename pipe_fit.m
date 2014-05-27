@@ -1,4 +1,4 @@
-clc
+
 if run_calculations
 bounds( i_scan , : ).min 	= 0 - angle_offset                                                      ;
 bounds( i_scan , : ).max	= 180 + angle_offset                                                    ;
@@ -48,9 +48,10 @@ corrosion( i_scan )     = nansum( .5 * d_t(          pos_patch ) .*             
 corr_bounds           	= [ max( i_scan-30 , 1 ) , min( i_scan+30 , numel( corrosion ) ) ]       	;
 corr_range              = corr_bounds( 1 ) : round( corr_bounds( 2 ) - 5 )                          ;
 set( h.corr ,             'XData' , corr_range ,                                                    ...
-                          'YData' , corrosion( corr_range )  )                                     ;
+                          'YData' , corrosion( corr_range ) )                                      ;
                       
-set( h.corrosion , 'XLim' , corr_bounds )                                                    ;
+set( h.corrosion , 'XLim' , corr_bounds ,                                                           ...
+                   'XTickLabel' , num2str( fliplr( urg_ft( get( h.corrosion , 'XTick' ) ) ) ) )                                                           ;
 cmap                    = flipud( jet( numel( diffs ) ) )                                           ;
 try
 %     delete( p_s( : ) )
@@ -69,7 +70,7 @@ for i_shape = 1 : numel( diffs )
     shape_y( 1 : ( 2*( diffs( i_shape )+1 ) ) , i_shape ) =     vertcat( y_scan( i_scan, ( diff_inds( 1 , i_shape ) : diff_inds( 2 , i_shape ) ) )' ,                   ...            
                                                             flipud( sind( out_t( i_scan, ( diff_inds( 1 , i_shape ) : diff_inds( 2 , i_shape ) ) )' ) ) * pipe_in )     ;
 	p_s( i_shape )                                        = patch( shape_x( 1 : ( 2*( diffs( i_shape )+1 ) ) , i_shape ) ,                                              ...
-                                                                   shape_y( 1 : ( 2*( diffs( i_shape )+1 ) ) , i_shape ) , [ 1 1 1 ] , 'EdgeColor' , 'none' )           ;
+                                                                   shape_y( 1 : ( 2*( diffs( i_shape )+1 ) ) , i_shape ) , [ 1 0 0 ] , 'EdgeColor' , 'none' )           ;
 end
 
 fit_title{ i_scan }     = sprintf( [ 'Fit Polynomial: %0.3f*\\theta^2 + %0.2f*\\theta + %0.2f'          ...

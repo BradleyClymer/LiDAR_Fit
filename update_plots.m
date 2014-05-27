@@ -9,8 +9,6 @@ end
 set( get( h.fit,    'Title' ) , 'String' , fit_title{ i_scan } )                            ;   %   Parabola Subplot Title
 %   set( h.med ,    'XData' , med_x , 'YData' , med_y )                                     ;   %   Cyan Fat Partial Circle
 set( h.raw_p,       'XData' , data.x( i_scan , : ) , 'YData' , data.y( i_scan , : )  )      ;   %   Red Fat Line
-% xlim( [ 1.8859   30.8000 ] )
-% ylim( [ 1.5920   26.0000 ] )
 set( h.fit_p ,      'XData' , x_scan( i_scan , :  ) ,'YData' , y_scan( i_scan , : )  )  	;   %   Green Fat Line
 set( h.circle ,     'XData' , par( i_scan, 3 ) * cosd( 0 : 360 ) ,                          ...
                     'YData' , par( i_scan, 3 ) * sind( 0 : 360 ) )                          ;   %   Yellow Centered Best-Fit Circle

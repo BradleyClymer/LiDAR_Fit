@@ -1,6 +1,7 @@
 clc
 close all hidden
 colordef black
+clear ipd_struct
 % clear
 profile on
 % urg_file        = 'test.ubh'
@@ -14,9 +15,47 @@ fid             = fopen( urg_file )
 if ~exist( 'urg_struct' , 'var' ) 
     disp( 'Reading Raw UrgBenri File' )
     urg_struct      = urg_struct_read( fid ) 
-    disp( 'Raw File Read' )
+    disp( 'Raw URG file has been read' )
+end
+% 
+if ~exist( 'ipd_file' , 'var' )
+    [ fu , pu ]	= uigetfile( '*.ipd' , 'Select HD index file' )
+    ipd_file    = fullfile( pu , fu )
 end
 
+ipd_fid         = fopen( ipd_file )
+
+if ~exist( 'ipd_struct' , 'var' ) 
+    disp( 'Reading Raw IPD File' )
+    ipd_struct   = ipd_reader( ipd_file , urg_struct( 1 ).date_vec )
+    disp( 'Raw IPD file has been read' )
+end
+
+                  fclose( 'all' )
+
+urg_ts          = [ urg_struct.timeStamp ]'                                 ;
+ipd_ts          = [ ipd_struct.clock ]                                      ;
+disp( 'Matching distance indeces' )                             
+
+for i = 1 : numel( urg_ts )
+    abs_diff        = ( ipd_ts - urg_ts( i ) ) .^2                          ;
+    ipd_index( i )  = mean( find( abs_diff == min( abs_diff ) , 1 ) )       ;
+end
+
+urg_ft              = ipd_struct.ft( ipd_index )                            ;
+plot( urg_ft )
+% 
+% plot( ipd_ts , ones( numel( ipd_ts ) , 1 ) , urg_ts , 2*ones( numel( urg_ts ) , 1 ) ) %, 'LineWidth' , 5 , 'LineSmoothing' , 'on' )
+% % close all
+% % plot( urg_ts , 2*ones( numel( urg_ts ) , 1 ) ) %, 'LineWidth' , 2 , 'LineSmoothing' , 'on' )
+% set( gcf , 'Units' , 'Normalized' , 'OuterPosition' , [ 0.05 0.05 0.9 0.9 ] )
+% axis tight
+% ylim( [ -1 3 ] )
+% grid on
+% set( gca , 'XTickLabel' , datestr( get( gca , 'XTick' ) ) )
+
+
+% return
 plot_parabola   = true                                                      ;
 run_calculations= true                                                      ;
 disp_plots      = true                                                      ;
@@ -36,7 +75,7 @@ y_weight        = sind( angles_deg )                                        ;
 angles_rad      = angles_deg  * pi / 180                                    ;   % -45 : 225 in radians
 angle_offset    = +20                                                       ;
 
-pipe_diameter   = 26                                                        ;
+pipe_diameter   = 48                                                        ;
 pipe_in         = pipe_diameter / 2                                         ;   % pipe radius in inches
 pipe_in_sq      = pipe_in ^ 2                                               ;
 accepted_diff   = .025 * pipe_diameter                                      ;   % inches
@@ -65,6 +104,8 @@ p               = zeros( num_scans , 3 )                    ;
 fit_curve       = zeros( num_scans, 1081 )                  ;
 vertex          = zeros( num_scans, 2 )                     ;
 fit_range       = logical( zeros( num_scans, 1081 ) )       ;
+
+
 
 if ~exist( 'all_x_med' , 'var' )
     disp( 'Pre-Processing Data' )
@@ -118,7 +159,7 @@ if ~exist( 'all_x_med' , 'var' )
     if ~exist( 'quants' , 'var' )
         quants   	= quantile( all_scans( : ) , [ quant_tol 1-quant_tol ] )
     end
-    disp( 'Pre-Processing of Data Complete' )    
+    disp( 'Pre-Processing of LiDAR Data Complete' )    
 end
 
 z_grid      = meshgrid( 1:size( all_x_med , 1 ) , 1:size( all_x_med , 2 ) )' 	;
@@ -140,7 +181,7 @@ h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
                                     'LineStyle' , '-' )                                 ;
 
         hold on 
-        h.fit_p     = plot( 0 , 0 , 'g' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )	;
+        h.fit_p     = plot( 0 , 0 , 'w' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )	;
         h.circle    = plot( 0 , 0 , 'y' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 ,    ...
                                           'Marker' , '.' , 'LineStyle' , 'none' )       ;
                                       
@@ -238,43 +279,30 @@ h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
         % vert            = @() [ ( ( -p( 2 ) / ( 2 * p( 1 ) ) ) / 1 ) * 180 / pi ,       ...
         %                            ( polyval( p , -p( 2 ) / ( 2 * p( 1 ) ) ) ) ]        ;
 h.corrosion         = subplot( 2 , 4 , 8 )                                          ;
-h.corr              = plot( 1 , 1 , 'Color' , 'r' , 'LineSmoothing' , 'on' , 'MarkerFaceColor' , [ 1 .8 .8 ] , 'MarkerEdgeColor' , 'none' , 'LineStyle' , '-' , 'Marker' , 'o' , 'LineWidth' , 3 )     ;
-ylim( [ 0 5 ] )
-grid on        
-title( 'Corrosion Area, in^2' )
-% h.logic             = figure( 'Position' , [ 316   353   576   512 ] )              ;
-%     h.logic_plot        = plot( angles_deg , repmat( x_weight , 4 , 1 ) , '.'  )        ;
-%     % set( h.logic_plot , { 'Color' } , { 'none' , 'none' , 'none' , 'none' }' )
-% 
-%     set( gca , 'XDir' , 'reverse' )
-%     ylim( [ 0 2 ] )
-%     hold on
-%     grid on
-%     h.range             = plot( [ 0 0 nan 1 1 nan 2 2 ] , [ 0 0 nan 1 1 nan 1 1 ] , 'Color' , 0.4 * [ 1 .8 1 ] , 'LineSmoothing' , 'on' )
-% 
-%     legend( { '~isnan' ; 'Not Bad Parabola' ; 'Above Min' ; 'Below Max' } )
+    h.corr              = plot( 1 , 1 , 'Color' , 'r' , 'LineSmoothing' , 'on' , 'MarkerFaceColor' , [ 1 .8 .8 ] , 'MarkerEdgeColor' , 'none' , 'LineStyle' , '-' , 'Marker' , 'o' , 'LineWidth' , 3 )     ;
+    ylim( [ 0 8 ] )
+    grid on        
+    title( 'Corrosion Area, in^2' )
+
     inner_ring_x            = pipe_in * x_weight                                        ;
     inner_ring_y            = pipe_in * y_weight                                        ;           
 axes( h.scan )
     hold on
-%     h.patch                 = patch( inner_ring_x , inner_ring_y , [ 1 1 0 ] )    ;
-%     set( h.patch , 'EdgeColor' , 'none' )
 
-desired_scans   = ( 1016 : 1674 ) + 3000                                                   ;
-% desired_scans   = 1360
-
+desired_scans   = ( 1016 : 1774 ) + 13000                                                    ;
+parab_order     = fit_order                                                                 ;
 
 for i_scan = desired_scans
-
+        i_scan
+        urg_struct( i_scan ).timeStamp
         raw_scan 	= all_scans( i_scan , : )                               	;
         pipe_fit                                                                ;
-        title( sprintf( 'Timestamp %d, %s, scan %d of %d -- Average Diameter: %0.2f' ,                     ...
-               urg_struct( i_scan ).timeStamp ,                                 ...
-               urg_struct( i_scan ).dateString ,                                ...
+        title( sprintf( 'Timestamp %s, scan %d of %d -- Average Diameter: %0.2f , %0.2f ft' ,                     ...
+               datestr( urg_struct( i_scan ).timeStamp ) ,                  	...
                i_scan ,                                                         ...
                num_scans ,                                                      ...
-               2*par( i_scan , 3 ) ) )                                          ;
-
+               2*par( i_scan , 3 )  ,                                           ...
+               urg_ft( i_scan ) ) )                                             ;
         drawnow
         diam_rec( parab_order , i_scan )    = par( i_scan , 3 )                 ;
 %         frame           = getframe
@@ -282,3 +310,18 @@ for i_scan = desired_scans
 %         pause( 0.2 )
 
 end
+
+% h.logic             = figure( 'Position' , [ 316   353   576   512 ] )              ;
+%     h.logic_plot        = plot( angles_deg , repmat( x_weight , 4 , 1 ) , '.'  )        ;
+%     % set( h.logic_plot , { 'Color' } , { 'none' , 'none' , 'none' , 'none' }' )
+% 
+%     set( gca , 'XDir' , 'reverse' )
+%     ylim( [ 0 2 ] )
+%     hold on
+
+%     h.patch                 = patch( inner_ring_x , inner_ring_y , [ 1 1 0 ] )    ;
+%     set( h.patch , 'EdgeColor' , 'none' )
+%     grid on
+%     h.range             = plot( [ 0 0 nan 1 1 nan 2 2 ] , [ 0 0 nan 1 1 nan 1 1 ] , 'Color' , 0.4 * [ 1 .8 1 ] , 'LineSmoothing' , 'on' )
+% 
+%     legend( { '~isnan' ; 'Not Bad Parabola' ; 'Above Min' ; 'Below Max' } )
