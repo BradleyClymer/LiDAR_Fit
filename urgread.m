@@ -3,7 +3,7 @@ close all hidden
 colordef black
 clear ipd_struct
 % clear
-profile on
+profile off
 % urg_file        = 'test.ubh'
 if ~exist( 'urg_file' , 'var' )
     [ fn , pn ]	= uigetfile( '*.ubh' , 'Select UrgBenri LiDAR data file' )
@@ -40,7 +40,7 @@ disp( 'Matching distance indeces' )
 for i = 1 : numel( urg_ts )
     abs_diff        = ( ipd_ts - urg_ts( i ) ) .^2                          ;
     ipd_index( i )  = mean( find( abs_diff == min( abs_diff ) , 1 ) )       ;
-end
+end 
 
 urg_ft              = ipd_struct.ft( ipd_index )                            ;
 plot( urg_ft )
@@ -58,8 +58,8 @@ plot( urg_ft )
 % return
 plot_parabola   = true                                                      ;
 run_calculations= true                                                      ;
-disp_plots      = true                                                      ;
-fit_order    	= 2                                                         ;  
+disp_plots      = false                                                     ;
+fit_order    	= 6                                                         ;  
 add_legends     = false                                                     ;
 
 mm_conversion   = 1 / 25.4                                                  ;   % 1mm in inches
@@ -73,9 +73,10 @@ y_weight        = sind( angles_deg )                                        ;
 % bounds.max      = 180                                                     ;
 
 angles_rad      = angles_deg  * pi / 180                                    ;   % -45 : 225 in radians
-angle_offset    = +20                                                       ;
+angle_offset    = +30                                                       ;
 
 pipe_diameter   = 48                                                        ;
+float_width     = 13
 pipe_in         = pipe_diameter / 2                                         ;   % pipe radius in inches
 pipe_in_sq      = pipe_in ^ 2                                               ;
 accepted_diff   = .025 * pipe_diameter                                      ;   % inches
@@ -100,10 +101,10 @@ urg_struct( bad_scans ) = []                                                ;   
 num_scans       = size( urg_struct , 1  )
 
 %   initialize stuff
-p               = zeros( num_scans , 3 )                    ;
+p               = zeros( num_scans , fit_order+1  )         ;
 fit_curve       = zeros( num_scans, 1081 )                  ;
 vertex          = zeros( num_scans, 2 )                     ;
-fit_range       = logical( zeros( num_scans, 1081 ) )       ;
+fit_range       = false( num_scans, 1081 )                  ;
 
 
 
@@ -114,8 +115,10 @@ if ~exist( 'all_x_med' , 'var' )
     sz              = size( all_x_weight )                                      ;   
 	raw_data        = double( horzcat( urg_struct.scan )' )                     ;
     infs            = ( raw_data == 60000 )                                     ;
+    fars            = ( raw_data > ( 2 * pipe_diameter / mm_conversion ) )      ; 
 %     zeros           = ( raw_data == 0 )                                         ;
     raw_data( infs )= 0                                                         ;
+    raw_data( fars )= 0                                                         ;
     middle_halo     = ( -20 : 20 ) + 1082/2                                     ;
     initial_offset  = median( median( raw_data( : , middle_halo ) ) ) *         ...
                       mm_conversion                                             ;
@@ -123,8 +126,8 @@ if ~exist( 'all_x_med' , 'var' )
     disp( 'Converting to Polar' )
     [ x_s , y_s ]   = pol2cart( angle_mat , raw_data )                          ;
     disp( 'Estimating pipe fit' )
-    circle.x        = pipe_in * all_x_weight                                    ;
-    circle.y        = pipe_in * all_y_weight                                    ;
+    circle.x        = pipe_in * x_weight                                        ;
+    circle.y        = pipe_in * y_weight                                        ;
     data.x          = x_s * mm_conversion                                       ;
     data.y          = y_s * mm_conversion - initial_offset + pipe_in            ;
     data.r          = sqrt( data.x .^2 + data.y .^2 )                           ;
@@ -133,7 +136,8 @@ if ~exist( 'all_x_med' , 'var' )
     disp( 'De-noising' )
     
     nan_value       = 60000 * mm_conversion                                     ;
-    all_scans( infs ) = nan_value                                               ;
+    all_scans( infs )= nan_value                                                ;
+    all_scans( fars )= nan_value                                                ;
     all_scans( all_scans == 0 ) = nan_value                                  	;
     
     all_x_raw       = all_scans .* all_x_weight                                 ;
@@ -145,7 +149,7 @@ if ~exist( 'all_x_med' , 'var' )
     disp( 'Median Filtering Complete.' )
     all_med( all_med == nan_value ) = nan                                       ;
     all_scans( all_scans == nan_value ) = nan                                   ;
-    all_med( data.noise ) = nan                                                 ;
+%     all_med( data.noise ) = nan                                                 ;
     all_x_med       = all_med .* all_x_weight                                   ;
     all_y_med       = all_med .* all_y_weight                                   ;
     x_guess         = mean( nanmedian( data.x ) )
@@ -166,20 +170,11 @@ z_grid      = meshgrid( 1:size( all_x_med , 1 ) , 1:size( all_x_med , 2 ) )' 	;
 
 h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
     h.scan      = subplot( 1 , 4 , 1:3 )
-    
-        h.raw_p     = plot( 0 , 0 , 'r' ,                                               ...
-                                    'LineSmoothing' , 'on' ,                            ...
-                                    'LineWidth' , 2 )                                   ;
-        set( gca , 'Color' , [0.0500    0.0750    0.0750] )                        
+        
 
         hold on  
         med_scan    = nanmedian( all_scans )                                            ;
-        h.med       = plot( med_scan .* x_weight  , med_scan .* y_weight , 'c--' ,   	...
-                                    'LineSmoothing' , 'on' ,                            ...
-                                    'LineWidth' , 5 ,                                   ...
-                                    'Marker' , '.' ,                                    ...
-                                    'LineStyle' , '-' )                                 ;
-
+        set( gca , 'Color' , [0.0500    0.0750    0.0750] )                        
         hold on 
         h.fit_p     = plot( 0 , 0 , 'w' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )	;
         h.circle    = plot( 0 , 0 , 'y' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 ,    ...
@@ -237,7 +232,7 @@ h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
 
 
         hold on 
-        h.plot4     = plot( 0 , 0 , 'y' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
+        h.parab     = plot( 0 , 0 , 'y' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
         set( gca , 'Color' , [0.0500    0.0750    0.0750] )
 
         h.fit_axes  = ancestor( h.red_filt , 'Axes' )                                   ;
@@ -257,7 +252,7 @@ h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
         xlim( [ -45 225 ] )
         disp( 'Quantiles Calculated.' )
         % ylim( quants + [ -0.5 0.5 ] )
-        ylim( [ 8 26 ] )
+        ylim( [ 8 ( pipe_diameter - ( float_width/2 ) ) ] )
         % all_args        = { all_x , all_y , z_grid , 'EdgeColor' , 'none' }         ;
         set( h.fit_axes , 'XTick' , -60 : 30 : 255 )
         set( h.singlefig , 'OuterPosition' , [ 1.014    0.1037    0.8708    1.0000 ] )
@@ -272,10 +267,8 @@ h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
         fixed_scan      = 79770         
         % desired_scans   = fixed_scan - 50 : fixed_scan                              ;
 
-
-        toggle( h.raw_p )
-        toggle( h.med )
-        toggle( h.circle ) 
+%         toggle( h.med )
+%         toggle( h.circle ) 
         % vert            = @() [ ( ( -p( 2 ) / ( 2 * p( 1 ) ) ) / 1 ) * 180 / pi ,       ...
         %                            ( polyval( p , -p( 2 ) / ( 2 * p( 1 ) ) ) ) ]        ;
 h.corrosion         = subplot( 2 , 4 , 8 )                                          ;
@@ -289,13 +282,16 @@ h.corrosion         = subplot( 2 , 4 , 8 )                                      
 axes( h.scan )
     hold on
 
-desired_scans   = ( 1016 : 1774 ) + 13000                                                    ;
-parab_order     = fit_order                                                                 ;
-
+desired_scans   = 1 : size( all_scans , 1 )                                             ;
+parab_order     = 2                                                                     ;
+fit_to_all      = false                                                                 ;
+minmax          = @( x ) [ min( x( : ) ) max( x( : ) ) ]                                ;
+toggle( h.circle ) 
 for i_scan = desired_scans
         i_scan
         urg_struct( i_scan ).timeStamp
         raw_scan 	= all_scans( i_scan , : )                               	;
+        try
         pipe_fit                                                                ;
         title( sprintf( 'Timestamp %s, scan %d of %d -- Average Diameter: %0.2f , %0.2f ft' ,                     ...
                datestr( urg_struct( i_scan ).timeStamp ) ,                  	...
@@ -303,13 +299,23 @@ for i_scan = desired_scans
                num_scans ,                                                      ...
                2*par( i_scan , 3 )  ,                                           ...
                urg_ft( i_scan ) ) )                                             ;
-        drawnow
+        
         diam_rec( parab_order , i_scan )    = par( i_scan , 3 )                 ;
+        
+        if disp_plots
+            drawnow
+            set( h.fit , 'YLim' , minmax( fit_curve( i_scan , : ) ) )
+            update_plots
+        end
+        catch
+        end
 %         frame           = getframe
 %         writeVideo( writerObj , frame ) 
 %         pause( 0.2 )
 
 end
+save( 'distance_and_corrosion.mat' , 'urg_ft' , 'corrosion' )
+profile viewer
 
 % h.logic             = figure( 'Position' , [ 316   353   576   512 ] )              ;
 %     h.logic_plot        = plot( angles_deg , repmat( x_weight , 4 , 1 ) , '.'  )        ;

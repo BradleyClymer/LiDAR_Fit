@@ -28,9 +28,4 @@ end
 fit_cell{ i_scan }          = { ( ~isnan( all_med( i_scan , : ) ) +.2 ) ;
                                 ( ~bad_fit +.4 ) ;
                                 ( ( angles_deg > ( bounds( i_scan , : ).min  ) ) +.6 ) ;
-                                ( ( angles_deg < ( bounds( i_scan , : ).max  ) ) + 0.8 ) }	;
-                            
-try
-    set( h.logic_plot , { 'YData' } , fit_cell{ i_scan } )                      
-catch
-end
+                                ( ( angles_deg < ( bounds( i_scan , : ).max  ) ) + 0.8 ) }      ;

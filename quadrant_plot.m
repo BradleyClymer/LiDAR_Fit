@@ -28,13 +28,23 @@ hold on
 title( [ 'Circle of Radius ' num2str( radius ) ] )
 
 for s = 1 : 4
-subplot( 420 + 2*s )
-plot( angles , dist( s , : ) , 'LineSmoothing' , 'on' )
-grid on
-axis normal
-title( [ 'Quadrant ' num2str( s ) ] )
-set( gca, 'XDir' , 'reverse' ) 
-set( gca, 'XTick' , ticks , 'XTickLabel' , ( num2str( ticks' ) ) )
+    subplot( 420 + 2*s )
+    for i_fit  = 1 : 2
+        p       = polyfit( angles , dist( s , : ) , i_fit )         ;
+        fit_ord{ 2 * i_fit - 1 }    = angles                        ;
+        fit_ord{ 2 * i_fit     }    = polyval( p , angles )         ;
+        names{ i_fit + 1 }          = sprintf( 'Order %d' , i_fit ) ;
+    end
+    names{ 1 }  = 'Actual Data' 
+    h( s , : )  = plot( angles , dist( s , : ) , fit_ord{ : } , 'LineSmoothing' , 'on' )
+    get( h( s ) )
+    set( h( s , 2:( i_fit-1 ) ) , 'Visible' , 'off' ) 
+    legend( { names{ : } } )
+    grid on
+    axis tight
+    title( [ 'Quadrant ' num2str( s ) ] )
+    set( gca, 'XDir' , 'reverse' )
+    set( gca, 'XTick' , ticks , 'XTickLabel' , ( num2str( ticks' ) ) )
 end
 polyfit( angles * pi / 180 , dist( end , : ) , 20 )
 polyfit( x_diff , y_diff , 20 )
