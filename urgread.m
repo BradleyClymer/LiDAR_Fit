@@ -248,7 +248,7 @@ h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
         h.bounds    = plot( [ 0         0       nan     180     180 ] ,                 ...
                             [ -100  	100 	nan     -100  	100        ] )          ;
         set( h.fit , 'XDir' , 'reverse' )                                
-
+      	set( h.fit , 'YLim' , [ 0 pipe_diameter ] )
         % axis equal
         grid on
         xlabel( '\theta, Degrees, -45 : 225' )
@@ -305,7 +305,6 @@ for i_scan = desired_scans
         
         if disp_plots
             drawnow
-            set( h.fit , 'YLim' , [ 0 pipe_diameter ] )
             update_plots
             find_corners
         end
