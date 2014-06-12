@@ -5,7 +5,12 @@ clear ipd_struct
 % clear
 profile off
 % urg_file        = 'test.ubh'
+old_folder      = pwd 
+data_folder     = 'C:\Users\bclymer\Downloads'
+data_folder     = 'P:\Dropbox (Future Scan)\Flyswatter (1)\DATA Flyswatter Project\RJN_CINCINNATI_PILOT_STUDY\36401003_36401001\'
+
 if ~exist( 'urg_file' , 'var' )
+    cd( data_folder )
     [ fn , pn ]	= uigetfile( '*.ubh' , 'Select UrgBenri LiDAR data file' )
     urg_file    = fullfile( pn , fn )
 end
@@ -14,12 +19,14 @@ fid             = fopen( urg_file )
 
 if ~exist( 'urg_struct' , 'var' ) 
     disp( 'Reading Raw UrgBenri File' )
+    cd( old_folder )
     urg_struct      = urg_struct_read( fid ) 
     disp( 'Raw URG file has been read' )
 end
 % 
 if ~exist( 'ipd_file' , 'var' )
-    [ fu , pu ]	= uigetfile( '*.ipd' , 'Select HD index file' )
+    cd( data_folder )
+    [ fu , pu ]	= uigetfile( fullfile( pn , '*.ipd' ) , 'Select HD index file' )
     ipd_file    = fullfile( pu , fu )
 end
 
@@ -27,6 +34,7 @@ ipd_fid         = fopen( ipd_file )
 
 if ~exist( 'ipd_struct' , 'var' ) 
     disp( 'Reading Raw IPD File' )
+	cd( old_folder )
     ipd_struct   = ipd_reader( ipd_file , urg_struct( 1 ).date_vec )
     disp( 'Raw IPD file has been read' )
 end
@@ -44,23 +52,24 @@ end
 
 urg_ft              = ipd_struct.ft( ipd_index )                            ;
 plot( urg_ft )
-% 
-% plot( ipd_ts , ones( numel( ipd_ts ) , 1 ) , urg_ts , 2*ones( numel( urg_ts ) , 1 ) ) %, 'LineWidth' , 5 , 'LineSmoothing' , 'on' )
-% % close all
-% % plot( urg_ts , 2*ones( numel( urg_ts ) , 1 ) ) %, 'LineWidth' , 2 , 'LineSmoothing' , 'on' )
-% set( gcf , 'Units' , 'Normalized' , 'OuterPosition' , [ 0.05 0.05 0.9 0.9 ] )
-% axis tight
-% ylim( [ -1 3 ] )
-% grid on
-% set( gca , 'XTickLabel' , datestr( get( gca , 'XTick' ) ) )
-
 
 % return
+
+df               = designfilt(   'lowpassfir' ,                             ...
+                                 'DesignMethod' ,           'equiripple' ,	...
+                                 'PassbandFrequency' ,       0.15 ,         ...
+                                 'StopbandFrequency' ,       0.2 ,          ...
+                                 'PassbandRipple' ,          1 ,            ...
+                                 'StopbandAttenuation' ,     60 ,           ...
+                                 'SampleRate' ,              9 )         	;
+
+
 plot_parabola   = true                                                      ;
 run_calculations= true                                                      ;
-disp_plots      = false                                                     ;
+disp_plots      = true                                                      ;
 fit_order    	= 6                                                         ;  
 add_legends     = false                                                     ;
+find_edges      = true                                                      ;
 
 mm_conversion   = 1 / 25.4                                                  ;   % 1mm in inches
 
@@ -69,13 +78,10 @@ angles_deg  	= linspace( -45 , 225 , numel( urg_struct( 1 ).scan ) )     ;   % a
 x_weight        = cosd( angles_deg )                                        ;   % pre-calculate the weights of the angles
 y_weight        = sind( angles_deg )                                        ;
 
-% bounds( i_scan ).min      = 0                                             ;
-% bounds.max      = 180                                                     ;
-
 angles_rad      = angles_deg  * pi / 180                                    ;   % -45 : 225 in radians
 angle_offset    = +30                                                       ;
 
-pipe_diameter   = 48                                                        ;
+pipe_diameter   = 54                                                        ;
 float_width     = 13
 pipe_in         = pipe_diameter / 2                                         ;   % pipe radius in inches
 pipe_in_sq      = pipe_in ^ 2                                               ;
@@ -170,8 +176,6 @@ z_grid      = meshgrid( 1:size( all_x_med , 1 ) , 1:size( all_x_med , 2 ) )' 	;
 
 h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
     h.scan      = subplot( 1 , 4 , 1:3 )
-        
-
         hold on  
         med_scan    = nanmedian( all_scans )                                            ;
         set( gca , 'Color' , [0.0500    0.0750    0.0750] )                        
@@ -203,7 +207,7 @@ h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
 
         set( gcf, 'Units' , 'Normalized' , 'Numbertitle' , 'Off' , 'Name' , [ 'Fit of Lidar to Pipe ' urg_file ] )
         xlim( 1.2 * pipe_in * [ -1 1 ] + [ -2 2 ] )
-        ylim( pipe_in * [ -1 1 ] + [ -2 2 ] )
+        ylim( pipe_in * [ -1 1 ] + 4 )
         if add_legends
 
         legend( { 'Raw Noisy Data' ,            ...
@@ -215,8 +219,7 @@ h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
                   'Best' )          ;
         end
         
-    h.fit       = subplot( 2 , 4 , 4 )                                              ;
-
+    h.fit       = subplot( 2 , 4 , 4 )                                                  ;
         h.bad_filt  = plot( 0 , 0 , 'bx' ,	'LineSmoothing' , 'on' ,                 	...
                                             'MarkerSize' , 3 ,                          ...
                                             'LineWidth' , 2 )                           ;     
@@ -233,6 +236,8 @@ h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
 
         hold on 
         h.parab     = plot( 0 , 0 , 'y' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
+        h.corner    = plot( angles_deg , pipe_diameter / 2 * ones( 1 , 1081 ) , 'g' ,   ...
+                                          'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
         set( gca , 'Color' , [0.0500    0.0750    0.0750] )
 
         h.fit_axes  = ancestor( h.red_filt , 'Axes' )                                   ;
@@ -264,13 +269,9 @@ h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
         last_time       = tic                                                       ;
         ifp             = urg_struct(1).header.scanMsec * 1e-3                      ;
         num_scans       = numel( urg_struct )                                       ;
-        fixed_scan      = 79770         
-        % desired_scans   = fixed_scan - 50 : fixed_scan                              ;
-
-%         toggle( h.med )
-%         toggle( h.circle ) 
-        % vert            = @() [ ( ( -p( 2 ) / ( 2 * p( 1 ) ) ) / 1 ) * 180 / pi ,       ...
-        %                            ( polyval( p , -p( 2 ) / ( 2 * p( 1 ) ) ) ) ]        ;
+        fixed_scan      = 79770  
+        generate_polynomial_title
+        
 h.corrosion         = subplot( 2 , 4 , 8 )                                          ;
     h.corr              = plot( 1 , 1 , 'Color' , 'r' , 'LineSmoothing' , 'on' , 'MarkerFaceColor' , [ 1 .8 .8 ] , 'MarkerEdgeColor' , 'none' , 'LineStyle' , '-' , 'Marker' , 'o' , 'LineWidth' , 3 )     ;
     ylim( [ 0 8 ] )
@@ -282,7 +283,7 @@ h.corrosion         = subplot( 2 , 4 , 8 )                                      
 axes( h.scan )
     hold on
 
-desired_scans   = 1 : size( all_scans , 1 )                                             ;
+desired_scans   = 13000 : size( all_scans , 1 )                                     	;
 parab_order     = 2                                                                     ;
 fit_to_all      = false                                                                 ;
 minmax          = @( x ) [ min( x( : ) ) max( x( : ) ) ]                                ;
@@ -304,30 +305,14 @@ for i_scan = desired_scans
         
         if disp_plots
             drawnow
-            set( h.fit , 'YLim' , minmax( fit_curve( i_scan , : ) ) )
+            set( h.fit , 'YLim' , [ 0 pipe_diameter ] )
             update_plots
+            find_corners
         end
-        catch
+        catch big_loop_error
+            disp( 'Kicked out.' )
+            disp( big_loop_error )
         end
-%         frame           = getframe
-%         writeVideo( writerObj , frame ) 
-%         pause( 0.2 )
-
 end
 save( 'distance_and_corrosion.mat' , 'urg_ft' , 'corrosion' )
 profile viewer
-
-% h.logic             = figure( 'Position' , [ 316   353   576   512 ] )              ;
-%     h.logic_plot        = plot( angles_deg , repmat( x_weight , 4 , 1 ) , '.'  )        ;
-%     % set( h.logic_plot , { 'Color' } , { 'none' , 'none' , 'none' , 'none' }' )
-% 
-%     set( gca , 'XDir' , 'reverse' )
-%     ylim( [ 0 2 ] )
-%     hold on
-
-%     h.patch                 = patch( inner_ring_x , inner_ring_y , [ 1 1 0 ] )    ;
-%     set( h.patch , 'EdgeColor' , 'none' )
-%     grid on
-%     h.range             = plot( [ 0 0 nan 1 1 nan 2 2 ] , [ 0 0 nan 1 1 nan 1 1 ] , 'Color' , 0.4 * [ 1 .8 1 ] , 'LineSmoothing' , 'on' )
-% 
-%     legend( { '~isnan' ; 'Not Bad Parabola' ; 'Above Min' ; 'Below Max' } )

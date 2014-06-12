@@ -53,14 +53,10 @@ corrosion( i_scan )     = nansum( .5 * d_t(          pos_patch ) .*             
                             	(    out_c( i_scan , pos_patch ) .^2 - pipe_in_sq ) )               ;
 corr_bounds           	= [ max( i_scan-30 , 1 ) , min( i_scan+30 , numel( corrosion ) ) ]       	;
 corr_range              = corr_bounds( 1 ) : round( corr_bounds( 2 ) - 5 )                          ;
-                                                         ;
 cmap                    = flipud( jet( numel( diffs ) ) )                                           ;
+
 try
-%     delete( p_s( : ) )
     delete( findobj( gca , 'type' , 'patch' ) )
-    delete( p_s( : ).top_scatter )
-    disp( 'Top Deleted.' )
-    delete( p_s( : ).bottom_scatter ) 
     disp( 'Bottom Deleted.' )
 catch
     disp( 'failed.' )
@@ -77,7 +73,6 @@ for i_shape = 1 : numel( diffs )
     end
 end
 
-fit_title{ i_scan }     = sprintf( [ 'Fit Polynomial: %0.3f*\\theta^2 + %0.2f*\\theta + %0.2f'          ...
-                                     ' -- Vertex: %0.2f°, %0.2f"' ] ,                                   ...
+fit_title{ i_scan }     = sprintf( fit_title_string ,                                                   ...
                                      p( i_scan , : ) , vertex( i_scan , : ) - [ 90 0 ] )                ;
 end                     

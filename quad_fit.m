@@ -1,3 +1,4 @@
+clc
 diff_sign       = -sign( accepted_diff - 1 )                                                ;
 if exist( 'vertex' , 'var' )
     cv                          = vertex( i_scan , 1 )                                      ;
@@ -6,7 +7,14 @@ if exist( 'vertex' , 'var' )
     bounds( i_scan , : ).range= bounds( i_scan , : ).max - bounds( i_scan , : ).min         ; 
     fprintf( 'Bound Range: %i°\n' , bounds( i_scan , : ).range )                            ;
 end
-
+[ bounds( i_scan , : ).min bounds( i_scan , : ).max ]
+if find_edges
+    find_corners                                                                            ;
+    bounds( i_scan , : ).min  = min( top_peaks ) / 4 - 46                                  	;
+    bounds( i_scan , : ).max  = max( top_peaks ) / 4 - 46                                	;
+    bounds( i_scan , : ).range= bounds( i_scan , : ).max - bounds( i_scan , : ).min         ; 
+end
+[ bounds( i_scan , : ).min bounds( i_scan , : ).max ]
 for i_squeeze = 1 : parab_order
     p( i_scan , : )             = polyfit( angles_rad( fit_range( i_scan , : ) ) ,           	...
                                            all_med( i_scan , fit_range( i_scan , : ) ) ,        ...
