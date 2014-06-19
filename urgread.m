@@ -1,13 +1,14 @@
 clc
 close all hidden
 colordef black
-clear ipd_struct
+% clear ipd_struct
 % clear
 profile off
 % urg_file        = 'test.ubh'
 old_folder      = pwd 
 data_folder     = 'C:\Users\bclymer\Downloads'
 data_folder     = 'P:\Dropbox (Future Scan)\Flyswatter (1)\DATA Flyswatter Project\RJN_CINCINNATI_PILOT_STUDY\36401003_36401001\'
+% data_folder     = old_folder
 
 if ~exist( 'urg_file' , 'var' )
     cd( data_folder )
@@ -26,17 +27,23 @@ end
 % 
 if ~exist( 'ipd_file' , 'var' )
     cd( data_folder )
-    [ fu , pu ]	= uigetfile( fullfile( pn , '*.ipd' ) , 'Select HD index file' )
-    ipd_file    = fullfile( pu , fu )
+    [ fu , pu , iu ]	= uigetfile( fullfile( pn , '*.ipd' ) , 'Select HD index file' )
+    ipd_file            = fullfile( pu , fu )
 end
 
-ipd_fid         = fopen( ipd_file )
-
-if ~exist( 'ipd_struct' , 'var' ) 
-    disp( 'Reading Raw IPD File' )
-	cd( old_folder )
-    ipd_struct   = ipd_reader( ipd_file , urg_struct( 1 ).date_vec )
-    disp( 'Raw IPD file has been read' )
+if fu
+    ipd_fid         = fopen( ipd_file )
+    
+    if ~exist( 'ipd_struct' , 'var' )
+        disp( 'Reading Raw IPD File' )
+        cd( old_folder )
+        ipd_struct   = ipd_reader( ipd_file , urg_struct( 1 ).date_vec )
+        disp( 'Raw IPD file has been read' )
+    end
+else
+    ipd_struct	= struct( 'ft' , 0 , 'clock' , 0 , 'num_scans' , 1 )        ;
+    disp( 'IPD struct spoofed.' )
+    cd( old_folder )
 end
 
                   fclose( 'all' )
@@ -51,10 +58,19 @@ for i = 1 : numel( urg_ts )
 end 
 
 urg_ft              = ipd_struct.ft( ipd_index )                            ;
-plot( urg_ft )
+figure
+h.urg_distance      = plot( urg_ts - min( urg_ts ) , urg_ft  )              ;
+title( urg_struct( 1 ).dateString )
+xt                  = get( get( h.urg_distance , 'Parent' ) , 'XTick' )     ;
+xtl                 = datestr( xt , 'MM:SS' )                               ;
+set( get( h.urg_distance , 'Parent' ) , 'XTickLabel' , xtl )                ;
+xlabel( 'Time, minutes:seconds' )
+ylabel( 'Distance, feet ' )
+axis tight
+grid on
 
 % return
-
+disp( 'Generating Spacial Filter' )
 df               = designfilt(   'lowpassfir' ,                             ...
                                  'DesignMethod' ,           'equiripple' ,	...
                                  'PassbandFrequency' ,       0.15 ,         ...
@@ -236,8 +252,8 @@ h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
 
         hold on 
         h.parab     = plot( 0 , 0 , 'y' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
-        h.corner    = plot( angles_deg , pipe_diameter / 2 * ones( 1 , 1081 ) , 'g' ,   ...
-                                          'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
+%         h.corner    = plot( angles_deg , pipe_diameter / 2 * ones( 1 , 1081 ) , 'g' ,   ...
+%                                           'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
         set( gca , 'Color' , [0.0500    0.0750    0.0750] )
 
         h.fit_axes  = ancestor( h.red_filt , 'Axes' )                                   ;
@@ -287,19 +303,19 @@ desired_scans   = 13000 : size( all_scans , 1 )                                 
 parab_order     = 2                                                                     ;
 fit_to_all      = false                                                                 ;
 minmax          = @( x ) [ min( x( : ) ) max( x( : ) ) ]                                ;
+time_format     = 'yyyy-mm-dd, HH:MM:SS.FFF'
 toggle( h.circle ) 
 for i_scan = desired_scans
-        i_scan
         urg_struct( i_scan ).timeStamp
         raw_scan 	= all_scans( i_scan , : )                               	;
         try
         pipe_fit                                                                ;
-        title( sprintf( 'Timestamp %s, scan %d of %d -- Average Diameter: %0.2f , %0.2f ft' ,                     ...
-               datestr( urg_struct( i_scan ).timeStamp ) ,                  	...
-               i_scan ,                                                         ...
-               num_scans ,                                                      ...
-               2*par( i_scan , 3 )  ,                                           ...
-               urg_ft( i_scan ) ) )                                             ;
+        title( sprintf( '%s\nScan %d of %d, %0.2f ft \nAverage Diameter: %0.2fin',   ...
+               datestr( urg_struct( i_scan ).timeStamp , time_format ) ,            ...
+               i_scan ,                                                             ...
+               num_scans ,                                                          ...
+               urg_ft( i_scan ) ,                                                   ...
+               2*par( i_scan , 3 ) ) )                                            	;
         
         diam_rec( parab_order , i_scan )    = par( i_scan , 3 )                 ;
         
@@ -308,6 +324,7 @@ for i_scan = desired_scans
             update_plots
             find_corners
         end
+        
         catch big_loop_error
             disp( 'Kicked out.' )
             disp( big_loop_error )

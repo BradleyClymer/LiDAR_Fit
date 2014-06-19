@@ -26,7 +26,7 @@ par_rec( end , : )      = CircleFitByTaubin( [  all_x_med( i_scan , curr_fit_ran
 par( i_scan, : )        = sum( par_rec .* filter_mat )                                              ;
                           axes( h.scan )                                                            ;
 
-x_scan( i_scan , : )    = all_x_med( i_scan , : ) - par( i_scan , 1 )  ;%- par( i_scan, 1 )                                ;
+x_scan( i_scan , : )    = all_x_med( i_scan , : ) - par( i_scan , 1 )                               ;%- par( i_scan, 1 )                                ;
 y_scan( i_scan , : )    = all_y_med( i_scan , : ) - par( i_scan , 2 ) + pipe_in - par( i_scan ,3)	;
 sign_correction         = 180 * ( x_scan( i_scan , : ) < 0 )                                        ;
 out_c( i_scan , : )     = ( ( x_scan( i_scan , : ) ) .^2 + ( y_scan( i_scan, : ) ) .^2 ) .^0.5      ;
@@ -53,7 +53,7 @@ corrosion( i_scan )     = nansum( .5 * d_t(          pos_patch ) .*             
                             	(    out_c( i_scan , pos_patch ) .^2 - pipe_in_sq ) )               ;
 corr_bounds           	= [ max( i_scan-30 , 1 ) , min( i_scan+30 , numel( corrosion ) ) ]       	;
 corr_range              = corr_bounds( 1 ) : round( corr_bounds( 2 ) - 5 )                          ;
-cmap                    = flipud( jet( numel( diffs ) ) )                                           ;
+% cmap                    = flipud( jet( numel( diffs ) ) )                                           ;
 
 try
     delete( findobj( gca , 'type' , 'patch' ) )
