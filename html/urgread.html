@@ -1,0 +1,8406 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>urgread</title><meta name="generator" content="MATLAB 8.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-07-14"><meta name="DC.source" content="urgread.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput">clc
+close <span class="string">all</span> <span class="string">hidden</span>
+colordef <span class="string">black</span>
+<span class="comment">% clear ipd_struct</span>
+clear
+profile <span class="string">off</span>
+<span class="comment">% urg_file        = 'test.ubh'</span>
+old_folder      = pwd
+data_folder     = <span class="string">'C:\Users\bclymer\Downloads'</span>
+data_folder     = <span class="string">'P:\Dropbox (Future Scan)\Flyswatter (1)\Testing'</span>
+<span class="comment">% data_folder     = old_folder</span>
+</pre><pre class="codeoutput">
+old_folder =
+
+C:\Users\bclymer\Documents\GitHub\LiDAR_Fit
+
+
+data_folder =
+
+C:\Users\bclymer\Downloads
+
+
+data_folder =
+
+P:\Dropbox (Future Scan)\Flyswatter (1)\Testing
+
+</pre><pre class="codeinput"><span class="keyword">if</span> ~exist( <span class="string">'urg_file'</span> , <span class="string">'var'</span> )
+    cd( data_folder )
+    [ fn , pn ]	= uigetfile( <span class="string">'*.ubh'</span> , <span class="string">'Select UrgBenri LiDAR data file'</span> )
+    urg_file    = fullfile( pn , fn )
+<span class="keyword">end</span>
+                  fclose( <span class="string">'all'</span> )
+fid             = fopen( urg_file )
+
+<span class="keyword">if</span> ~exist( <span class="string">'urg_struct'</span> , <span class="string">'var'</span> )
+    disp( <span class="string">'Reading Raw UrgBenri File'</span> )
+    cd( old_folder )
+    urg_struct      = urg_struct_read( fid )
+    disp( <span class="string">'Raw URG file has been read'</span> )
+<span class="keyword">end</span>
+<span class="comment">%</span>
+<span class="keyword">if</span> ~exist( <span class="string">'ipd_file'</span> , <span class="string">'var'</span> )
+    cd( data_folder )
+    [ fu , pu , iu ]	= uigetfile( fullfile( pn , <span class="string">'*.ipd'</span> ) , <span class="string">'Select HD index file'</span> )
+    ipd_file            = fullfile( pu , fu )
+<span class="keyword">end</span>
+
+<span class="keyword">if</span> fu
+    ipd_fid         = fopen( ipd_file )
+
+    <span class="keyword">if</span> ~exist( <span class="string">'ipd_struct'</span> , <span class="string">'var'</span> )
+        disp( <span class="string">'Reading Raw IPD File'</span> )
+        cd( old_folder )
+        ipd_struct   = ipd_reader( ipd_file , urg_struct( 1 ).date_vec )
+        disp( <span class="string">'Raw IPD file has been read'</span> )
+    <span class="keyword">end</span>
+<span class="keyword">else</span>
+    spoofed.ft  = ( 0 : ( numel( urg_struct ) -1 ) ) / 80                   ;
+    ipd_struct	= struct( <span class="string">'ft'</span> ,  spoofed.ft  , <span class="string">'clock'</span> , [ urg_struct.timeStamp ] , <span class="string">'num_scans'</span> , size( urg_struct , 1 ) )	;
+    disp( <span class="string">'IPD struct spoofed.'</span> )
+    cd( old_folder )
+<span class="keyword">end</span>
+
+                  fclose( <span class="string">'all'</span> )
+
+urg_ts          = [ urg_struct.timeStamp ]'                                 ;
+ipd_ts          = [ ipd_struct.clock ]                                      ;
+disp( <span class="string">'Matching distance indeces'</span> )
+
+<span class="keyword">for</span> i = 1 : numel( urg_ts )
+    abs_diff        = ( ipd_ts - urg_ts( i ) ) .^2                          ;
+    ipd_index( i )  = mean( find( abs_diff == min( abs_diff ) , 1 ) )       ;
+<span class="keyword">end</span>
+
+urg_ft              = ipd_struct.ft( ipd_index )                            ;
+figure
+h.urg_distance      = plot( urg_ts - min( urg_ts ) , urg_ft )               ;
+title( urg_struct( 1 ).dateString )
+xt                  = get( get( h.urg_distance , <span class="string">'Parent'</span> ) , <span class="string">'XTick'</span> )     ;
+xtl                 = datestr( xt , <span class="string">'MM:SS'</span> )                               ;
+set( get( h.urg_distance , <span class="string">'Parent'</span> ) , <span class="string">'XTickLabel'</span> , xtl )                ;
+xlabel( <span class="string">'Time, minutes:seconds'</span> )
+ylabel( <span class="string">'Distance, feet '</span> )
+axis <span class="string">tight</span>
+grid <span class="string">on</span>
+
+<span class="comment">% return</span>
+force_filter_gen    = false                                                 ;
+
+<span class="keyword">if</span> ~exist( <span class="string">'df.mat'</span> , <span class="string">'file'</span> ) || force_filter_gen
+disp( <span class="string">'Generating Spacial Filter'</span> )
+df               = designfilt(   <span class="string">'lowpassfir'</span> ,                             <span class="keyword">...</span>
+                                 <span class="string">'DesignMethod'</span> ,           <span class="string">'equiripple'</span> ,	<span class="keyword">...</span>
+                                 <span class="string">'PassbandFrequency'</span> ,       0.15 ,         <span class="keyword">...</span>
+                                 <span class="string">'StopbandFrequency'</span> ,       0.2 ,          <span class="keyword">...</span>
+                                 <span class="string">'PassbandRipple'</span> ,          1 ,            <span class="keyword">...</span>
+                                 <span class="string">'StopbandAttenuation'</span> ,     60 ,           <span class="keyword">...</span>
+                                 <span class="string">'SampleRate'</span> ,              9 )         	;
+
+df
+<span class="keyword">else</span>
+    load( <span class="string">'df.mat'</span> )
+<span class="keyword">end</span>
+plot_parabola   = true                                                      ;
+run_calculations= true                                                      ;
+disp_plots      = true                                                      ;
+fit_order    	= 6                                                         ;
+add_legends     = false                                                     ;
+find_edges      = false                                                     ;
+
+mm_conversion   = 1 / 25.4                                                  ;   <span class="comment">% 1mm in inches</span>
+
+angles_deg  	= linspace( -45 , 225 , numel( urg_struct( 1 ).scan ) )     ;   <span class="comment">% angles of LiDAR scan, in as many</span>
+                                                                                <span class="comment">% points as one scan has</span>
+x_weight        = cosd( angles_deg )                                        ;   <span class="comment">% pre-calculate the weights of the angles</span>
+y_weight        = sind( angles_deg )                                        ;
+
+angles_rad      = angles_deg  * pi / 180                                    ;   <span class="comment">% -45 : 225 in radians</span>
+angle_offset    = +30                                                       ;
+
+pipe_diameter   = 24.9                                                      ;
+float_width     = 13                                                        ;
+pipe_in         = pipe_diameter / 2                                         ;   <span class="comment">% pipe radius in inches</span>
+pipe_in_sq      = pipe_in ^ 2                                               ;
+accepted_diff   = .025 * pipe_diameter                                      ;   <span class="comment">% inches</span>
+
+pipe_mm         = pipe_in / mm_conversion                                   ;   <span class="comment">%  '      '     '  mm</span>
+inner_tol       = .95 * pipe_in                                             ;
+mm_rad          = pipe_mm / 2                                               ;   <span class="comment">% pipe radius in mm</span>
+vertex( 1 )     = 90                                                        ;
+vertex( 2 )     = pipe_in                                                   ;
+
+
+filter_order    = 5                                                        ;   <span class="comment">% order of the median filter</span>
+filter_roll     = -3                                                         ;   <span class="comment">% filter roll-off rate</span>
+filter_raw      = exp( filter_roll * ( filter_order : -1 : 1 )' /filter_order  )       ;   <span class="comment">% generate some filter coefficients</span>
+filter_new      = filter_raw / ( sum( filter_raw , 1 ) / 1 )                ;   <span class="comment">% normalize coefficients</span>
+filter_mat      = repmat( filter_new , 1 , 3 )                              ;   <span class="comment">% matrix of coefficients</span>
+min_rec         = zeros( numel( filter_order ) , 1 )                        ;   <span class="comment">% initialize record of minima</span>
+struct_size_vec = cell2mat( arrayfun( @( x ) size( x.scan ) , urg_struct ,  <span class="keyword">...</span>
+                           <span class="string">'UniformOutput'</span> , false ) )                      ;   <span class="comment">% size of scans. ex: 1081x1</span>
+bad_scans       = struct_size_vec( : , 1 ) ~= 1081                          ;   <span class="comment">% find non-conforming scans</span>
+urg_struct( bad_scans ) = []                                                ;   <span class="comment">% remove bad scans</span>
+num_scans       = size( urg_struct , 1  )
+
+<span class="comment">%   initialize stuff</span>
+p               = zeros( num_scans , fit_order+1  )         ;
+fit_curve       = zeros( num_scans, 1081 )                  ;
+vertex          = zeros( num_scans, 2 )                     ;
+fit_range       = false( num_scans, 1081 )                  ;
+
+
+
+<span class="keyword">if</span> ~exist( <span class="string">'all_x_med'</span> , <span class="string">'var'</span> )
+    disp( <span class="string">'Pre-Processing Data'</span> )
+    all_x_weight    = repmat( x_weight , num_scans , 1 )                        ;   <span class="comment">% cos( -45 : 0.25 : 1081 )</span>
+    all_y_weight    = repmat( y_weight , num_scans , 1 )                        ;   <span class="comment">% sin(  '       '     '  )</span>
+    sz              = size( all_x_weight )                                      ;
+	raw_data        = double( horzcat( urg_struct.scan )' )                     ;
+    infs            = ( raw_data == 60000 )                                     ;
+    fars            = ( raw_data &gt; ( 2 * pipe_diameter / mm_conversion ) )      ;
+<span class="comment">%     zeros           = ( raw_data == 0 )                                         ;</span>
+    raw_data( infs )= 0                                                         ;
+    raw_data( fars )= 0                                                         ;
+    middle_halo     = ( -20 : 20 ) + 1082/2                                     ;
+    initial_offset  = median( median( raw_data( : , middle_halo ) ) ) *         <span class="keyword">...</span>
+                      mm_conversion                                             ;
+	angle_mat       = repmat( angles_rad , sz( 1 ) , 1 )                        ;
+    disp( <span class="string">'Converting to Polar'</span> )
+    [ x_s , y_s ]   = pol2cart( angle_mat , raw_data )                          ;
+    disp( <span class="string">'Estimating pipe fit'</span> )
+    circle.x        = pipe_in * x_weight                                        ;
+    circle.y        = pipe_in * y_weight                                        ;
+    data.x          = x_s * mm_conversion                                       ;
+    data.y          = y_s * mm_conversion - initial_offset + pipe_in            ;
+    data.r          = sqrt( data.x .^2 + data.y .^2 )                           ;
+    data.noise      = abs( data.r - pipe_in ) &gt; ( .2 * pipe_in )                ;
+    all_scans       = double( raw_data ) * mm_conversion                        ;
+    disp( <span class="string">'De-noising'</span> )
+
+    nan_value       = 60000 * mm_conversion                                     ;
+    all_scans( infs )= nan_value                                                ;
+    all_scans( fars )= nan_value                                                ;
+    all_scans( all_scans == 0 ) = nan_value                                  	;
+
+    all_x_raw       = all_scans .* all_x_weight                                 ;
+    all_y_raw       = all_scans .* all_y_weight                                 ;
+    med_rad         = 7                                                         ;
+    med_range       = -med_rad : med_rad                                        ;
+    disp( <span class="string">'Median Filtering Data (longest portion of pre-processing)'</span> )
+    all_med         = medfilt2( all_scans , [ 2 * med_rad + 1 , 1 ] )           ;
+    disp( <span class="string">'Median Filtering Complete.'</span> )
+    all_med( all_med == nan_value ) = nan                                       ;
+    all_scans( all_scans == nan_value ) = nan                                   ;
+<span class="comment">%     all_med( data.noise ) = nan                                                 ;</span>
+    all_x_med       = all_med .* all_x_weight                                   ;
+    all_y_med       = all_med .* all_y_weight                                   ;
+    x_guess         = mean( nanmedian( data.x ) )
+    y_guess         = initial_offset - pipe_in
+    R_guess         = pipe_in
+    par_rec         = repmat( [ x_guess y_guess R_guess ] ,                     <span class="keyword">...</span>
+                      size( filter_mat , 1 ) , 1 )                              ;   <span class="comment">% initialize record of circle parameters</span>
+
+    disp( <span class="string">'Calculating Quantiles for Y-Limits'</span> )
+    quant_tol       = 0.2
+    <span class="keyword">if</span> ~exist( <span class="string">'quants'</span> , <span class="string">'var'</span> )
+        quants   	= quantile( all_scans( : ) , [ quant_tol 1-quant_tol ] )
+    <span class="keyword">end</span>
+    disp( <span class="string">'Pre-Processing of LiDAR Data Complete'</span> )
+<span class="keyword">end</span>
+
+z_grid      = meshgrid( 1:size( all_x_med , 1 ) , 1:size( all_x_med , 2 ) )' 	;
+
+h.singlefig = figure( <span class="string">'NumberTitle'</span> , <span class="string">'off'</span> , <span class="string">'Name'</span> , <span class="string">'Fit of Lidar to Pipe'</span> )
+    h.scan      = subplot( 1 , 4 , 1:3 )
+        hold <span class="string">on</span>
+        med_scan    = nanmedian( all_scans )                                            ;
+        set( gca , <span class="string">'Color'</span> , [0.0500    0.0750    0.0750] )
+        hold <span class="string">on</span>
+        h.fit_p     = plot( 0 , 0 , <span class="string">'w'</span> , <span class="string">'LineSmoothing'</span> , <span class="string">'on'</span> , <span class="string">'LineWidth'</span> , 2 )	;
+        h.circle    = plot( 0 , 0 , <span class="string">'y'</span> , <span class="string">'LineSmoothing'</span> , <span class="string">'on'</span> , <span class="string">'LineWidth'</span> , 2 ,    <span class="keyword">...</span>
+                                          <span class="string">'Marker'</span> , <span class="string">'.'</span> , <span class="string">'LineStyle'</span> , <span class="string">'none'</span> )       ;
+
+        circle_template.x     = pipe_in * x_weight                                      ;
+        circle_template.y     = pipe_in * y_weight                                      ;
+        h.template  = plot( circle_template.x ,                                         <span class="keyword">...</span>
+                            circle_template.y ,                                         <span class="keyword">...</span>
+                            <span class="string">'Color'</span> , 0.6 * [ 1 1 1 ] ,                                 <span class="keyword">...</span>
+                            <span class="string">'LineStyle'</span> , <span class="string">'.'</span> ,                                         <span class="keyword">...</span>
+                            <span class="string">'LineSmoothing'</span> , <span class="string">'on'</span> ,                                    <span class="keyword">...</span>
+                            <span class="string">'LineWidth'</span> , 2 ,                                           <span class="keyword">...</span>
+                            <span class="string">'Marker'</span> , <span class="string">'none'</span> ,                                        	<span class="keyword">...</span>
+                            <span class="string">'LineStyle'</span> , <span class="string">'-'</span> )                                         ;
+        plot( 100 * [ -1 1 ] , [ 0 0 ] , <span class="string">'Color'</span> , [ 0 0 1 ] , <span class="string">'LineSmoothing'</span> , <span class="string">'on'</span> )
+        plot( [ 0 0 ] , 100 * [ -1 1 ] , <span class="string">'Color'</span> , [ 0 0 1 ] , <span class="string">'LineSmoothing'</span> , <span class="string">'on'</span> )
+        axis <span class="string">equal</span>
+        grid <span class="string">on</span>
+        xlabel( <span class="string">'Inches'</span> )
+        ylabel( <span class="string">'Inches'</span> )
+        file_title  = urg_file                  ;
+        <span class="comment">% file_title( file_title == '_' ) = '-'   ;</span>
+        strrep( file_title , <span class="string">'\'</span> , <span class="string">'\\'</span> )
+        title( file_title  )
+
+        set( gcf, <span class="string">'Units'</span> , <span class="string">'Normalized'</span> , <span class="string">'Numbertitle'</span> , <span class="string">'Off'</span> , <span class="string">'Name'</span> , [ <span class="string">'Fit of Lidar to Pipe '</span> urg_file ] )
+        xlim( 1.2 * pipe_in * [ -1 1 ] + [ -2 2 ] )
+        ylim_offset                                     = 1
+        ylim( pipe_in * [ -1 1 ] + ylim_offset )
+        <span class="keyword">if</span> add_legends
+
+        legend( { <span class="string">'Raw Noisy Data'</span> ,            <span class="keyword">...</span>
+                  <span class="string">'Median Filtered'</span> ,           <span class="keyword">...</span>
+                  <span class="string">'Shifted'</span>,                    <span class="keyword">...</span>
+                  <span class="string">'Pipe Fit'</span> ,                  <span class="keyword">...</span>
+                  <span class="string">'Pipe Template'</span> } ,           <span class="keyword">...</span>
+                  <span class="string">'Location'</span> ,                  <span class="keyword">...</span>
+                  <span class="string">'Best'</span> )          ;
+        <span class="keyword">end</span>
+
+    h.fit       = subplot( 2 , 4 , 4 )                                                  ;
+        h.bad_filt  = plot( 0 , 0 , <span class="string">'bx'</span> ,	<span class="string">'LineSmoothing'</span> , <span class="string">'on'</span> ,                 	<span class="keyword">...</span>
+                                            <span class="string">'MarkerSize'</span> , 3 ,                          <span class="keyword">...</span>
+                                            <span class="string">'LineWidth'</span> , 2 )                           ;
+                      set( h.bad_filt ,     <span class="string">'MarkerEdgeColor'</span> , 1/255 * [ 119 136 193 ] <span class="keyword">...</span>
+                                      ,     <span class="string">'MarkerFaceColor'</span> , 1/255 * [ 198 226 255 ] )
+        hold <span class="string">on</span>
+        h.red_filt 	= plot( 0 , 0 , <span class="string">'r+'</span> , 	<span class="string">'LineSmoothing'</span> , <span class="string">'on'</span> ,                 	<span class="keyword">...</span>
+                                            <span class="string">'MarkerSize'</span> , 3 ,                          <span class="keyword">...</span>
+                                            <span class="string">'LineWidth'</span> , 2 )                           ;
+                      set( h.red_filt ,     <span class="string">'MarkerEdgeColor'</span> , 1/255 * [ 255 54 64 ]   <span class="keyword">...</span>
+                                      ,     <span class="string">'MarkerFaceColor'</span> , 1/395 * [ 139 35 35 ] )
+
+
+
+        hold <span class="string">on</span>
+        h.parab     = plot( 0 , 0 , <span class="string">'y'</span> , <span class="string">'LineSmoothing'</span> , <span class="string">'on'</span> , <span class="string">'LineWidth'</span> , 2 )    ;
+<span class="comment">%         h.corner    = plot( angles_deg , pipe_diameter / 2 * ones( 1 , 1081 ) , 'g' ,   ...</span>
+<span class="comment">%                                           'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;</span>
+        set( gca , <span class="string">'Color'</span> , [0.0500    0.0750    0.0750] )
+
+        h.fit_axes  = ancestor( h.red_filt , <span class="string">'Axes'</span> )                                   ;
+        h.min_mark  = scatter( 0 , 0 , <span class="string">'o'</span>, <span class="string">'MarkerEdgeColor'</span> , <span class="string">'b'</span> ,                   <span class="keyword">...</span>
+                                            <span class="string">'MarkerFaceColor'</span> , [ 0 0.5 0.5 ] ,         <span class="keyword">...</span>
+                                            <span class="string">'LineWidth'</span> , 3 )                           ;
+
+        h.bounds    = plot( [ 0         0       nan     180     180 ] ,                 <span class="keyword">...</span>
+                            [ -100  	100 	nan     -100  	100        ] )          ;
+        set( h.fit , <span class="string">'XDir'</span> , <span class="string">'reverse'</span> )
+      	set( h.fit , <span class="string">'YLim'</span> , [ 0 pipe_diameter ] )
+        <span class="comment">% axis equal</span>
+        grid <span class="string">on</span>
+        xlabel( <span class="string">'\theta, Degrees, -45 : 225'</span> )
+        ylabel( <span class="string">'\rho, Inches'</span> )
+        set( gcf, <span class="string">'Units'</span> , <span class="string">'Normalized'</span> )
+        xlim( [ -45 225 ] )
+        disp( <span class="string">'Quantiles Calculated.'</span> )
+        <span class="comment">% ylim( quants + [ -0.5 0.5 ] )</span>
+        ylim( [ 8 ( pipe_diameter - ( float_width/2 ) ) ] )
+        <span class="comment">% all_args        = { all_x , all_y , z_grid , 'EdgeColor' , 'none' }         ;</span>
+        set( h.fit_axes , <span class="string">'XTick'</span> , -60 : 30 : 255 )
+        set( h.singlefig , <span class="string">'OuterPosition'</span> , [ 1.014    0.1037    0.8708    1.0000 ] )
+        <span class="keyword">if</span> add_legends
+        legend( { <span class="string">'Included Points'</span> , <span class="string">'Excluded Points'</span> , <span class="string">'Parabolic Fit Curve'</span> , <span class="string">'Parabola Vertex'</span> } )
+        <span class="keyword">end</span>
+
+        drawnow
+        last_time       = tic                                                       ;
+        ifp             = urg_struct(1).header.scanMsec * 1e-3                      ;
+        num_scans       = numel( urg_struct )                                       ;
+        fixed_scan      = 79770
+        generate_polynomial_title
+
+h.corrosion         = subplot( 2 , 4 , 8 )                                          ;
+    h.corr              = plot( 1 , 1 , <span class="string">'Color'</span> , <span class="string">'r'</span> , <span class="string">'LineSmoothing'</span> , <span class="string">'on'</span> , <span class="string">'MarkerFaceColor'</span> , [ 1 .8 .8 ] , <span class="string">'MarkerEdgeColor'</span> , <span class="string">'none'</span> , <span class="string">'LineStyle'</span> , <span class="string">'-'</span> , <span class="string">'Marker'</span> , <span class="string">'o'</span> , <span class="string">'LineWidth'</span> , 3 )     ;
+    ylim( [ 0 8 ] )
+    grid <span class="string">on</span>
+    title( <span class="string">'Corrosion Area, in^2'</span> )
+
+    inner_ring_x            = pipe_in * x_weight                                        ;
+    inner_ring_y            = pipe_in * y_weight                                        ;
+axes( h.scan )
+    hold <span class="string">on</span>
+
+desired_scans   = 1 : size( all_scans , 1 )                                     	;
+parab_order     = 2                                                                     ;
+fit_to_all      = false                                                                 ;
+minmax          = @( x ) [ min( x( : ) ) max( x( : ) ) ]                                ;
+time_format     = <span class="string">'yyyy-mm-dd, HH:MM:SS.FFF'</span>
+toggle( h.circle )
+<span class="keyword">for</span> i_scan = desired_scans
+        urg_struct( i_scan ).timeStamp
+        raw_scan 	= all_scans( i_scan , : )                               	;
+        <span class="keyword">try</span>
+        pipe_fit                                                                ;
+        title( sprintf( <span class="string">'%s\nScan %d of %d, %0.2f ft \nAverage Diameter: %0.2fin'</span>,   <span class="keyword">...</span>
+               datestr( urg_struct( i_scan ).timeStamp , time_format ) ,            <span class="keyword">...</span>
+               i_scan ,                                                             <span class="keyword">...</span>
+               num_scans ,                                                          <span class="keyword">...</span>
+               urg_ft( i_scan ) ,                                                   <span class="keyword">...</span>
+               2*par( i_scan , 3 ) ) )                                            	;
+
+        diam_rec( parab_order , i_scan )    = par( i_scan , 3 )                 ;
+
+        <span class="keyword">if</span> disp_plots
+            drawnow
+            update_plots
+<span class="comment">%             find_corners</span>
+        <span class="keyword">end</span>
+
+        <span class="keyword">catch</span> big_loop_error
+            disp( <span class="string">'Kicked out.'</span> )
+            disp( big_loop_error )
+<span class="comment">%             pause</span>
+        <span class="keyword">end</span>
+<span class="keyword">end</span>
+save( <span class="string">'distance_and_corrosion.mat'</span> , <span class="string">'urg_ft'</span> , <span class="string">'corrosion'</span> )
+<span class="comment">% profile viewer</span>
+</pre><pre class="codeoutput">
+fn =
+
+2014_07_09_11_44_27-H1315325-With_Film.ubh
+
+
+pn =
+
+P:\Dropbox (Future Scan)\Flyswatter (1)\Testing\
+
+
+urg_file =
+
+P:\Dropbox (Future Scan)\Flyswatter (1)\Testing\2014_07_09_11_44_27-H1315325-With_Film.ubh
+
+
+ans =
+
+     0
+
+
+fid =
+
+     3
+
+Reading Raw UrgBenri File
+Grabbing raw field data.
+Raw data acquired.
+
+Converting date to serial number.
+Date information parsed.
+
+Converting scan text to vectors.
+Assembling Scan Structure.
+Structure assembled.
+Elapsed time is 12.083067 seconds.
+
+urg_struct = 
+
+275x1 struct array with fields:
+
+    dateString
+    scan
+    timeStamp
+    header
+    date_vec
+
+Raw URG file has been read
+
+fu =
+
+     0
+
+
+pu =
+
+     0
+
+
+iu =
+
+     0
+
+
+ipd_file =
+
+ \ 
+
+IPD struct spoofed.
+
+ans =
+
+     0
+
+Matching distance indeces
+
+num_scans =
+
+   275
+
+Pre-Processing Data
+Converting to Polar
+Estimating pipe fit
+De-noising
+Median Filtering Data (longest portion of pre-processing)
+Median Filtering Complete.
+
+x_guess =
+
+    -0.014809
+
+
+y_guess =
+
+       4.4398
+
+
+R_guess =
+
+        12.45
+
+Calculating Quantiles for Y-Limits
+
+quant_tol =
+
+          0.2
+
+
+quants =
+
+       10.118       16.142
+
+Pre-Processing of LiDAR Data Complete
+
+h = 
+
+    urg_distance: 174.04
+       singlefig: 2
+
+
+h = 
+
+    urg_distance: 174.04
+       singlefig: 2
+            scan: 351.04
+
+Warning: Setting marker type based on 'LineStyle' property
+         'Marker' and 'LineStyle' have been made separate properties
+         Use 'Marker' property to remove this warning 
+
+ans =
+
+P:\\Dropbox (Future Scan)\\Flyswatter (1)\\Testing\\2014_07_09_11_44_27-H1315325-With_Film.ubh
+
+Warning: Unable to interpret TeX string "P:\Dropbox (Future Scan)\Flyswatter
+(1)\Testing\2014_07_09_11_44_27-H1315325-With_Film.ubh" 
+
+ylim_offset =
+
+     1
+
+Quantiles Calculated.
+
+fixed_scan =
+
+       79770
+
+
+time_format =
+
+yyyy-mm-dd, HH:MM:SS.FFF
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.454       209.55
+
+
+ans =
+
+      -30.454       209.55
+
+Bottom Deleted.
+
+ans =
+
+            0          0.2          0.4          0.6          0.8            1
+
+
+curr_xl =
+
+   NaN   NaN
+
+
+curr_xl =
+
+     0     1
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.452       209.55
+
+
+ans =
+
+      -30.452       209.55
+
+Bottom Deleted.
+
+ans =
+
+            0          0.2          0.4          0.6          0.8            1
+
+
+curr_xl =
+
+   NaN   NaN
+
+
+curr_xl =
+
+     0     1
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.441       209.56
+
+
+ans =
+
+      -30.441       209.56
+
+Bottom Deleted.
+
+ans =
+
+            0          0.2          0.4          0.6          0.8            1
+
+
+curr_xl =
+
+   NaN   NaN
+
+
+curr_xl =
+
+     0     1
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.534       209.47
+
+
+ans =
+
+      -30.534       209.47
+
+Bottom Deleted.
+
+ans =
+
+            0          0.2          0.4          0.6          0.8            1
+
+
+curr_xl =
+
+   NaN   NaN
+
+
+curr_xl =
+
+     0     1
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.552       209.45
+
+
+ans =
+
+      -30.552       209.45
+
+Bottom Deleted.
+
+ans =
+
+            0          0.2          0.4          0.6          0.8            1
+
+
+curr_xl =
+
+   NaN   NaN
+
+
+curr_xl =
+
+     0     1
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.555       209.44
+
+
+ans =
+
+      -30.555       209.44
+
+Bottom Deleted.
+
+ans =
+
+            0          0.2          0.4          0.6          0.8            1
+
+
+curr_xl =
+
+         -0.4          0.2
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.567       209.43
+
+
+ans =
+
+      -30.567       209.43
+
+Bottom Deleted.
+
+ans =
+
+         -0.4         -0.2            0          0.2
+
+
+curr_xl =
+
+     -0.39375      0.20625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.572       209.43
+
+
+ans =
+
+      -30.572       209.43
+
+Bottom Deleted.
+
+ans =
+
+         -0.3         -0.2         -0.1            0          0.1          0.2
+
+
+curr_xl =
+
+      -0.3875       0.2125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.554       209.45
+
+
+ans =
+
+      -30.554       209.45
+
+Bottom Deleted.
+
+ans =
+
+         -0.3         -0.2         -0.1            0          0.1          0.2
+
+
+curr_xl =
+
+     -0.38125      0.21875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.598        209.4
+
+
+ans =
+
+      -30.598        209.4
+
+Bottom Deleted.
+
+ans =
+
+         -0.3         -0.2         -0.1            0          0.1          0.2
+
+
+curr_xl =
+
+       -0.375        0.225
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.572       209.43
+
+
+ans =
+
+      -30.572       209.43
+
+Bottom Deleted.
+
+ans =
+
+         -0.3         -0.2         -0.1            0          0.1          0.2
+
+
+curr_xl =
+
+     -0.36875      0.23125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.532       209.47
+
+
+ans =
+
+      -30.532       209.47
+
+Bottom Deleted.
+
+ans =
+
+         -0.3         -0.2         -0.1            0          0.1          0.2
+
+
+curr_xl =
+
+      -0.3625       0.2375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.565       209.43
+
+
+ans =
+
+      -30.565       209.43
+
+Bottom Deleted.
+
+ans =
+
+         -0.3         -0.2         -0.1            0          0.1          0.2
+
+
+curr_xl =
+
+     -0.35625      0.24375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.529       209.47
+
+
+ans =
+
+      -30.529       209.47
+
+Bottom Deleted.
+
+ans =
+
+         -0.3         -0.2         -0.1            0          0.1          0.2
+
+
+curr_xl =
+
+        -0.35         0.25
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.55       209.45
+
+
+ans =
+
+       -30.55       209.45
+
+Bottom Deleted.
+
+ans =
+
+         -0.3         -0.2         -0.1            0          0.1          0.2
+
+
+curr_xl =
+
+     -0.34375      0.25625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.603        209.4
+
+
+ans =
+
+      -30.603        209.4
+
+Bottom Deleted.
+
+ans =
+
+         -0.3         -0.2         -0.1            0          0.1          0.2
+
+
+curr_xl =
+
+      -0.3375       0.2625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.503        209.5
+
+
+ans =
+
+      -30.503        209.5
+
+Bottom Deleted.
+
+ans =
+
+         -0.3         -0.2         -0.1            0          0.1          0.2
+
+
+curr_xl =
+
+     -0.33125      0.26875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.517       209.48
+
+
+ans =
+
+      -30.517       209.48
+
+Bottom Deleted.
+
+ans =
+
+         -0.3         -0.2         -0.1            0          0.1          0.2
+
+
+curr_xl =
+
+       -0.325        0.275
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.547       209.45
+
+
+ans =
+
+      -30.547       209.45
+
+Bottom Deleted.
+
+ans =
+
+         -0.3         -0.2         -0.1            0          0.1          0.2
+
+
+curr_xl =
+
+     -0.31875      0.28125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.543       209.46
+
+
+ans =
+
+      -30.543       209.46
+
+Bottom Deleted.
+
+ans =
+
+         -0.3         -0.2         -0.1            0          0.1          0.2
+
+
+curr_xl =
+
+      -0.3125       0.2875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.441       209.56
+
+
+ans =
+
+      -30.441       209.56
+
+Bottom Deleted.
+
+ans =
+
+         -0.3         -0.2         -0.1            0          0.1          0.2
+
+
+curr_xl =
+
+     -0.30625      0.29375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.494       209.51
+
+
+ans =
+
+      -30.494       209.51
+
+Bottom Deleted.
+
+ans =
+
+         -0.3         -0.2         -0.1            0          0.1          0.2
+
+
+curr_xl =
+
+         -0.3          0.3
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.469       209.53
+
+
+ans =
+
+      -30.469       209.53
+
+Bottom Deleted.
+
+ans =
+
+  Columns 1 through 6
+
+         -0.3         -0.2         -0.1            0          0.1          0.2
+
+  Column 7
+
+          0.3
+
+
+curr_xl =
+
+     -0.29375      0.30625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.438       209.56
+
+
+ans =
+
+      -30.438       209.56
+
+Bottom Deleted.
+
+ans =
+
+         -0.2         -0.1            0          0.1          0.2          0.3
+
+
+curr_xl =
+
+      -0.2875       0.3125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.472       209.53
+
+
+ans =
+
+      -30.472       209.53
+
+Bottom Deleted.
+
+ans =
+
+         -0.2         -0.1            0          0.1          0.2          0.3
+
+
+curr_xl =
+
+     -0.28125      0.31875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.418       209.58
+
+
+ans =
+
+      -30.418       209.58
+
+Bottom Deleted.
+
+ans =
+
+         -0.2         -0.1            0          0.1          0.2          0.3
+
+
+curr_xl =
+
+       -0.275        0.325
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.417       209.58
+
+
+ans =
+
+      -30.417       209.58
+
+Bottom Deleted.
+
+ans =
+
+         -0.2         -0.1            0          0.1          0.2          0.3
+
+
+curr_xl =
+
+     -0.26875      0.33125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.38       209.62
+
+
+ans =
+
+       -30.38       209.62
+
+Bottom Deleted.
+
+ans =
+
+         -0.2         -0.1            0          0.1          0.2          0.3
+
+
+curr_xl =
+
+      -0.2625       0.3375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.334       209.67
+
+
+ans =
+
+      -30.334       209.67
+
+Bottom Deleted.
+
+ans =
+
+         -0.2         -0.1            0          0.1          0.2          0.3
+
+
+curr_xl =
+
+     -0.25625      0.34375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.27       209.73
+
+
+ans =
+
+       -30.27       209.73
+
+Bottom Deleted.
+
+ans =
+
+         -0.2         -0.1            0          0.1          0.2          0.3
+
+
+curr_xl =
+
+        -0.25         0.35
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.238       209.76
+
+
+ans =
+
+      -30.238       209.76
+
+Bottom Deleted.
+
+ans =
+
+         -0.2         -0.1            0          0.1          0.2          0.3
+
+
+curr_xl =
+
+     -0.24375      0.35625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.182       209.82
+
+
+ans =
+
+      -30.182       209.82
+
+Bottom Deleted.
+
+ans =
+
+         -0.2         -0.1            0          0.1          0.2          0.3
+
+
+curr_xl =
+
+     -0.23125      0.36875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.294       209.71
+
+
+ans =
+
+      -30.294       209.71
+
+Bottom Deleted.
+
+ans =
+
+         -0.2         -0.1            0          0.1          0.2          0.3
+
+
+curr_xl =
+
+     -0.21875      0.38125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.302        209.7
+
+
+ans =
+
+      -30.302        209.7
+
+Bottom Deleted.
+
+ans =
+
+         -0.2         -0.1            0          0.1          0.2          0.3
+
+
+curr_xl =
+
+     -0.20625      0.39375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.35       209.65
+
+
+ans =
+
+       -30.35       209.65
+
+Bottom Deleted.
+
+ans =
+
+         -0.2         -0.1            0          0.1          0.2          0.3
+
+
+curr_xl =
+
+     -0.19375      0.40625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.351       209.65
+
+
+ans =
+
+      -30.351       209.65
+
+Bottom Deleted.
+
+ans =
+
+         -0.1            0          0.1          0.2          0.3          0.4
+
+
+curr_xl =
+
+     -0.18125      0.41875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.35       209.65
+
+
+ans =
+
+       -30.35       209.65
+
+Bottom Deleted.
+
+ans =
+
+         -0.1            0          0.1          0.2          0.3          0.4
+
+
+curr_xl =
+
+     -0.16875      0.43125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.358       209.64
+
+
+ans =
+
+      -30.358       209.64
+
+Bottom Deleted.
+
+ans =
+
+         -0.1            0          0.1          0.2          0.3          0.4
+
+
+curr_xl =
+
+     -0.15625      0.44375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.382       209.62
+
+
+ans =
+
+      -30.382       209.62
+
+Bottom Deleted.
+
+ans =
+
+         -0.1            0          0.1          0.2          0.3          0.4
+
+
+curr_xl =
+
+     -0.14375      0.45625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.386       209.61
+
+
+ans =
+
+      -30.386       209.61
+
+Bottom Deleted.
+
+ans =
+
+         -0.1            0          0.1          0.2          0.3          0.4
+
+
+curr_xl =
+
+     -0.13125      0.46875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.392       209.61
+
+
+ans =
+
+      -30.392       209.61
+
+Bottom Deleted.
+
+ans =
+
+         -0.1            0          0.1          0.2          0.3          0.4
+
+
+curr_xl =
+
+     -0.11875      0.48125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.429       209.57
+
+
+ans =
+
+      -30.429       209.57
+
+Bottom Deleted.
+
+ans =
+
+         -0.1            0          0.1          0.2          0.3          0.4
+
+
+curr_xl =
+
+     -0.10625      0.49375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.504        209.5
+
+
+ans =
+
+      -30.504        209.5
+
+Bottom Deleted.
+
+ans =
+
+         -0.1            0          0.1          0.2          0.3          0.4
+
+
+curr_xl =
+
+     -0.09375      0.50625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.508       209.49
+
+
+ans =
+
+      -30.508       209.49
+
+Bottom Deleted.
+
+ans =
+
+            0          0.1          0.2          0.3          0.4          0.5
+
+
+curr_xl =
+
+     -0.08125      0.51875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.54       209.46
+
+
+ans =
+
+       -30.54       209.46
+
+Bottom Deleted.
+
+ans =
+
+            0          0.1          0.2          0.3          0.4          0.5
+
+
+curr_xl =
+
+     -0.06875      0.53125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.601        209.4
+
+
+ans =
+
+      -30.601        209.4
+
+Bottom Deleted.
+
+ans =
+
+            0          0.1          0.2          0.3          0.4          0.5
+
+
+curr_xl =
+
+     -0.05625      0.54375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.581       209.42
+
+
+ans =
+
+      -30.581       209.42
+
+Bottom Deleted.
+
+ans =
+
+            0          0.1          0.2          0.3          0.4          0.5
+
+
+curr_xl =
+
+     -0.04375      0.55625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.586       209.41
+
+
+ans =
+
+      -30.586       209.41
+
+Bottom Deleted.
+
+ans =
+
+            0          0.1          0.2          0.3          0.4          0.5
+
+
+curr_xl =
+
+     -0.03125      0.56875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.528       209.47
+
+
+ans =
+
+      -30.528       209.47
+
+Bottom Deleted.
+
+ans =
+
+            0          0.1          0.2          0.3          0.4          0.5
+
+
+curr_xl =
+
+     -0.01875      0.58125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.482       209.52
+
+
+ans =
+
+      -30.482       209.52
+
+Bottom Deleted.
+
+ans =
+
+            0          0.1          0.2          0.3          0.4          0.5
+
+
+curr_xl =
+
+     -0.00625      0.59375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.463       209.54
+
+
+ans =
+
+      -30.463       209.54
+
+Bottom Deleted.
+
+ans =
+
+            0          0.1          0.2          0.3          0.4          0.5
+
+
+curr_xl =
+
+      0.00625      0.60625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.403        209.6
+
+
+ans =
+
+      -30.403        209.6
+
+Bottom Deleted.
+
+ans =
+
+          0.1          0.2          0.3          0.4          0.5          0.6
+
+
+curr_xl =
+
+      0.01875      0.61875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.492       209.51
+
+
+ans =
+
+      -30.492       209.51
+
+Bottom Deleted.
+
+ans =
+
+          0.1          0.2          0.3          0.4          0.5          0.6
+
+
+curr_xl =
+
+      0.03125      0.63125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.395        209.6
+
+
+ans =
+
+      -30.395        209.6
+
+Bottom Deleted.
+
+ans =
+
+          0.1          0.2          0.3          0.4          0.5          0.6
+
+
+curr_xl =
+
+      0.04375      0.64375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.391       209.61
+
+
+ans =
+
+      -30.391       209.61
+
+Bottom Deleted.
+
+ans =
+
+          0.1          0.2          0.3          0.4          0.5          0.6
+
+
+curr_xl =
+
+      0.05625      0.65625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.402        209.6
+
+
+ans =
+
+      -30.402        209.6
+
+Bottom Deleted.
+
+ans =
+
+          0.1          0.2          0.3          0.4          0.5          0.6
+
+
+curr_xl =
+
+      0.06875      0.66875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.381       209.62
+
+
+ans =
+
+      -30.381       209.62
+
+Bottom Deleted.
+
+ans =
+
+          0.1          0.2          0.3          0.4          0.5          0.6
+
+
+curr_xl =
+
+      0.08125      0.68125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.38       209.62
+
+
+ans =
+
+       -30.38       209.62
+
+Bottom Deleted.
+
+ans =
+
+          0.1          0.2          0.3          0.4          0.5          0.6
+
+
+curr_xl =
+
+      0.09375      0.69375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.356       209.64
+
+
+ans =
+
+      -30.356       209.64
+
+Bottom Deleted.
+
+ans =
+
+          0.1          0.2          0.3          0.4          0.5          0.6
+
+
+curr_xl =
+
+          0.1          0.7
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.421       209.58
+
+
+ans =
+
+      -30.421       209.58
+
+Bottom Deleted.
+
+ans =
+
+  Columns 1 through 6
+
+          0.1          0.2          0.3          0.4          0.5          0.6
+
+  Column 7
+
+          0.7
+
+
+curr_xl =
+
+      0.11875      0.71875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.399        209.6
+
+
+ans =
+
+      -30.399        209.6
+
+Bottom Deleted.
+
+ans =
+
+          0.2          0.3          0.4          0.5          0.6          0.7
+
+
+curr_xl =
+
+      0.13125      0.73125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.43       209.57
+
+
+ans =
+
+       -30.43       209.57
+
+Bottom Deleted.
+
+ans =
+
+          0.2          0.3          0.4          0.5          0.6          0.7
+
+
+curr_xl =
+
+       0.1375       0.7375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.445       209.56
+
+
+ans =
+
+      -30.445       209.56
+
+Bottom Deleted.
+
+ans =
+
+          0.2          0.3          0.4          0.5          0.6          0.7
+
+
+curr_xl =
+
+      0.14375      0.74375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.47       209.53
+
+
+ans =
+
+       -30.47       209.53
+
+Bottom Deleted.
+
+ans =
+
+          0.2          0.3          0.4          0.5          0.6          0.7
+
+
+curr_xl =
+
+         0.15         0.75
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.468       209.53
+
+
+ans =
+
+      -30.468       209.53
+
+Bottom Deleted.
+
+ans =
+
+          0.2          0.3          0.4          0.5          0.6          0.7
+
+
+curr_xl =
+
+      0.15625      0.75625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.456       209.54
+
+
+ans =
+
+      -30.456       209.54
+
+Bottom Deleted.
+
+ans =
+
+          0.2          0.3          0.4          0.5          0.6          0.7
+
+
+curr_xl =
+
+       0.1625       0.7625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.427       209.57
+
+
+ans =
+
+      -30.427       209.57
+
+Bottom Deleted.
+
+ans =
+
+          0.2          0.3          0.4          0.5          0.6          0.7
+
+
+curr_xl =
+
+      0.16875      0.76875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.427       209.57
+
+
+ans =
+
+      -30.427       209.57
+
+Bottom Deleted.
+
+ans =
+
+          0.2          0.3          0.4          0.5          0.6          0.7
+
+
+curr_xl =
+
+        0.175        0.775
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.439       209.56
+
+
+ans =
+
+      -30.439       209.56
+
+Bottom Deleted.
+
+ans =
+
+          0.2          0.3          0.4          0.5          0.6          0.7
+
+
+curr_xl =
+
+      0.18125      0.78125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.495        209.5
+
+
+ans =
+
+      -30.495        209.5
+
+Bottom Deleted.
+
+ans =
+
+          0.2          0.3          0.4          0.5          0.6          0.7
+
+
+curr_xl =
+
+       0.1875       0.7875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.483       209.52
+
+
+ans =
+
+      -30.483       209.52
+
+Bottom Deleted.
+
+ans =
+
+          0.2          0.3          0.4          0.5          0.6          0.7
+
+
+curr_xl =
+
+      0.19375      0.79375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.414       209.59
+
+
+ans =
+
+      -30.414       209.59
+
+Bottom Deleted.
+
+ans =
+
+          0.2          0.3          0.4          0.5          0.6          0.7
+
+
+curr_xl =
+
+          0.2          0.8
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.436       209.56
+
+
+ans =
+
+      -30.436       209.56
+
+Bottom Deleted.
+
+ans =
+
+  Columns 1 through 6
+
+          0.2          0.3          0.4          0.5          0.6          0.7
+
+  Column 7
+
+          0.8
+
+
+curr_xl =
+
+      0.20625      0.80625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.489       209.51
+
+
+ans =
+
+      -30.489       209.51
+
+Bottom Deleted.
+
+ans =
+
+          0.3          0.4          0.5          0.6          0.7          0.8
+
+
+curr_xl =
+
+       0.2125       0.8125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.429       209.57
+
+
+ans =
+
+      -30.429       209.57
+
+Bottom Deleted.
+
+ans =
+
+          0.3          0.4          0.5          0.6          0.7          0.8
+
+
+curr_xl =
+
+      0.21875      0.81875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.437       209.56
+
+
+ans =
+
+      -30.437       209.56
+
+Bottom Deleted.
+
+ans =
+
+          0.3          0.4          0.5          0.6          0.7          0.8
+
+
+curr_xl =
+
+        0.225        0.825
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.462       209.54
+
+
+ans =
+
+      -30.462       209.54
+
+Bottom Deleted.
+
+ans =
+
+          0.3          0.4          0.5          0.6          0.7          0.8
+
+
+curr_xl =
+
+      0.23125      0.83125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.407       209.59
+
+
+ans =
+
+      -30.407       209.59
+
+Bottom Deleted.
+
+ans =
+
+          0.3          0.4          0.5          0.6          0.7          0.8
+
+
+curr_xl =
+
+       0.2375       0.8375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.427       209.57
+
+
+ans =
+
+      -30.427       209.57
+
+Bottom Deleted.
+
+ans =
+
+          0.3          0.4          0.5          0.6          0.7          0.8
+
+
+curr_xl =
+
+      0.24375      0.84375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.491       209.51
+
+
+ans =
+
+      -30.491       209.51
+
+Bottom Deleted.
+
+ans =
+
+          0.3          0.4          0.5          0.6          0.7          0.8
+
+
+curr_xl =
+
+         0.25         0.85
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.483       209.52
+
+
+ans =
+
+      -30.483       209.52
+
+Bottom Deleted.
+
+ans =
+
+          0.3          0.4          0.5          0.6          0.7          0.8
+
+
+curr_xl =
+
+      0.25625      0.85625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.576       209.42
+
+
+ans =
+
+      -30.576       209.42
+
+Bottom Deleted.
+
+ans =
+
+          0.3          0.4          0.5          0.6          0.7          0.8
+
+
+curr_xl =
+
+       0.2625       0.8625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.558       209.44
+
+
+ans =
+
+      -30.558       209.44
+
+Bottom Deleted.
+
+ans =
+
+          0.3          0.4          0.5          0.6          0.7          0.8
+
+
+curr_xl =
+
+      0.26875      0.86875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.588       209.41
+
+
+ans =
+
+      -30.588       209.41
+
+Bottom Deleted.
+
+ans =
+
+          0.3          0.4          0.5          0.6          0.7          0.8
+
+
+curr_xl =
+
+        0.275        0.875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.524       209.48
+
+
+ans =
+
+      -30.524       209.48
+
+Bottom Deleted.
+
+ans =
+
+          0.3          0.4          0.5          0.6          0.7          0.8
+
+
+curr_xl =
+
+      0.43125       1.0313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.517       209.48
+
+
+ans =
+
+      -30.517       209.48
+
+Bottom Deleted.
+
+ans =
+
+          0.5          0.6          0.7          0.8          0.9            1
+
+
+curr_xl =
+
+      0.44375       1.0438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.593       209.41
+
+
+ans =
+
+      -30.593       209.41
+
+Bottom Deleted.
+
+ans =
+
+          0.5          0.6          0.7          0.8          0.9            1
+
+
+curr_xl =
+
+      0.45625       1.0562
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.601        209.4
+
+
+ans =
+
+      -30.601        209.4
+
+Bottom Deleted.
+
+ans =
+
+          0.5          0.6          0.7          0.8          0.9            1
+
+
+curr_xl =
+
+      0.46875       1.0687
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.574       209.43
+
+
+ans =
+
+      -30.574       209.43
+
+Bottom Deleted.
+
+ans =
+
+          0.5          0.6          0.7          0.8          0.9            1
+
+
+curr_xl =
+
+      0.48125       1.0813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.581       209.42
+
+
+ans =
+
+      -30.581       209.42
+
+Bottom Deleted.
+
+ans =
+
+          0.5          0.6          0.7          0.8          0.9            1
+
+
+curr_xl =
+
+      0.49375       1.0938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.626       209.37
+
+
+ans =
+
+      -30.626       209.37
+
+Bottom Deleted.
+
+ans =
+
+          0.5          0.6          0.7          0.8          0.9            1
+
+
+curr_xl =
+
+      0.50625       1.1063
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.631       209.37
+
+
+ans =
+
+      -30.631       209.37
+
+Bottom Deleted.
+
+ans =
+
+          0.6          0.7          0.8          0.9            1          1.1
+
+
+curr_xl =
+
+      0.51875       1.1187
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.622       209.38
+
+
+ans =
+
+      -30.622       209.38
+
+Bottom Deleted.
+
+ans =
+
+          0.6          0.7          0.8          0.9            1          1.1
+
+
+curr_xl =
+
+      0.53125       1.1312
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.615       209.39
+
+
+ans =
+
+      -30.615       209.39
+
+Bottom Deleted.
+
+ans =
+
+          0.6          0.7          0.8          0.9            1          1.1
+
+
+curr_xl =
+
+      0.54375       1.1438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.583       209.42
+
+
+ans =
+
+      -30.583       209.42
+
+Bottom Deleted.
+
+ans =
+
+          0.6          0.7          0.8          0.9            1          1.1
+
+
+curr_xl =
+
+      0.55625       1.1563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.505       209.49
+
+
+ans =
+
+      -30.505       209.49
+
+Bottom Deleted.
+
+ans =
+
+          0.6          0.7          0.8          0.9            1          1.1
+
+
+curr_xl =
+
+      0.56875       1.1688
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.543       209.46
+
+
+ans =
+
+      -30.543       209.46
+
+Bottom Deleted.
+
+ans =
+
+          0.6          0.7          0.8          0.9            1          1.1
+
+
+curr_xl =
+
+      0.58125       1.1812
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.467       209.53
+
+
+ans =
+
+      -30.467       209.53
+
+Bottom Deleted.
+
+ans =
+
+          0.6          0.7          0.8          0.9            1          1.1
+
+
+curr_xl =
+
+      0.59375       1.1937
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.522       209.48
+
+
+ans =
+
+      -30.522       209.48
+
+Bottom Deleted.
+
+ans =
+
+          0.6          0.7          0.8          0.9            1          1.1
+
+
+curr_xl =
+
+      0.60625       1.2063
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.426       209.57
+
+
+ans =
+
+      -30.426       209.57
+
+Bottom Deleted.
+
+ans =
+
+          0.7          0.8          0.9            1          1.1          1.2
+
+
+curr_xl =
+
+      0.61875       1.2188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.418       209.58
+
+
+ans =
+
+      -30.418       209.58
+
+Bottom Deleted.
+
+ans =
+
+          0.7          0.8          0.9            1          1.1          1.2
+
+
+curr_xl =
+
+      0.63125       1.2313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.413       209.59
+
+
+ans =
+
+      -30.413       209.59
+
+Bottom Deleted.
+
+ans =
+
+          0.7          0.8          0.9            1          1.1          1.2
+
+
+curr_xl =
+
+      0.64375       1.2437
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.394       209.61
+
+
+ans =
+
+      -30.394       209.61
+
+Bottom Deleted.
+
+ans =
+
+          0.7          0.8          0.9            1          1.1          1.2
+
+
+curr_xl =
+
+      0.65625       1.2562
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.475       209.52
+
+
+ans =
+
+      -30.475       209.52
+
+Bottom Deleted.
+
+ans =
+
+          0.7          0.8          0.9            1          1.1          1.2
+
+
+curr_xl =
+
+      0.66875       1.2688
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.534       209.47
+
+
+ans =
+
+      -30.534       209.47
+
+Bottom Deleted.
+
+ans =
+
+          0.7          0.8          0.9            1          1.1          1.2
+
+
+curr_xl =
+
+      0.68125       1.2813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.485       209.52
+
+
+ans =
+
+      -30.485       209.52
+
+Bottom Deleted.
+
+ans =
+
+          0.7          0.8          0.9            1          1.1          1.2
+
+
+curr_xl =
+
+      0.69375       1.2938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.457       209.54
+
+
+ans =
+
+      -30.457       209.54
+
+Bottom Deleted.
+
+ans =
+
+          0.7          0.8          0.9            1          1.1          1.2
+
+
+curr_xl =
+
+      0.70625       1.3062
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.429       209.57
+
+
+ans =
+
+      -30.429       209.57
+
+Bottom Deleted.
+
+ans =
+
+          0.8          0.9            1          1.1          1.2          1.3
+
+
+curr_xl =
+
+      0.71875       1.3187
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.46       209.54
+
+
+ans =
+
+       -30.46       209.54
+
+Bottom Deleted.
+
+ans =
+
+          0.8          0.9            1          1.1          1.2          1.3
+
+
+curr_xl =
+
+      0.73125       1.3313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.488       209.51
+
+
+ans =
+
+      -30.488       209.51
+
+Bottom Deleted.
+
+ans =
+
+          0.8          0.9            1          1.1          1.2          1.3
+
+
+curr_xl =
+
+      0.74375       1.3438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.443       209.56
+
+
+ans =
+
+      -30.443       209.56
+
+Bottom Deleted.
+
+ans =
+
+          0.8          0.9            1          1.1          1.2          1.3
+
+
+curr_xl =
+
+      0.75625       1.3563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.408       209.59
+
+
+ans =
+
+      -30.408       209.59
+
+Bottom Deleted.
+
+ans =
+
+          0.8          0.9            1          1.1          1.2          1.3
+
+
+curr_xl =
+
+      0.76875       1.3687
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.425       209.58
+
+
+ans =
+
+      -30.425       209.58
+
+Bottom Deleted.
+
+ans =
+
+          0.8          0.9            1          1.1          1.2          1.3
+
+
+curr_xl =
+
+      0.78125       1.3812
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.483       209.52
+
+
+ans =
+
+      -30.483       209.52
+
+Bottom Deleted.
+
+ans =
+
+          0.8          0.9            1          1.1          1.2          1.3
+
+
+curr_xl =
+
+      0.79375       1.3938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.481       209.52
+
+
+ans =
+
+      -30.481       209.52
+
+Bottom Deleted.
+
+ans =
+
+          0.8          0.9            1          1.1          1.2          1.3
+
+
+curr_xl =
+
+          0.8          1.4
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.532       209.47
+
+
+ans =
+
+      -30.532       209.47
+
+Bottom Deleted.
+
+ans =
+
+          0.9            1          1.1          1.2          1.3          1.4
+
+
+curr_xl =
+
+      0.81875       1.4188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.521       209.48
+
+
+ans =
+
+      -30.521       209.48
+
+Bottom Deleted.
+
+ans =
+
+          0.9            1          1.1          1.2          1.3          1.4
+
+
+curr_xl =
+
+      0.83125       1.4312
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.478       209.52
+
+
+ans =
+
+      -30.478       209.52
+
+Bottom Deleted.
+
+ans =
+
+          0.9            1          1.1          1.2          1.3          1.4
+
+
+curr_xl =
+
+      0.84375       1.4437
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.435       209.56
+
+
+ans =
+
+      -30.435       209.56
+
+Bottom Deleted.
+
+ans =
+
+          0.9            1          1.1          1.2          1.3          1.4
+
+
+curr_xl =
+
+      0.85625       1.4563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.345       209.65
+
+
+ans =
+
+      -30.345       209.65
+
+Bottom Deleted.
+
+ans =
+
+          0.9            1          1.1          1.2          1.3          1.4
+
+
+curr_xl =
+
+      0.86875       1.4688
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.332       209.67
+
+
+ans =
+
+      -30.332       209.67
+
+Bottom Deleted.
+
+ans =
+
+          0.9            1          1.1          1.2          1.3          1.4
+
+
+curr_xl =
+
+      0.88125       1.4813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.357       209.64
+
+
+ans =
+
+      -30.357       209.64
+
+Bottom Deleted.
+
+ans =
+
+          0.9            1          1.1          1.2          1.3          1.4
+
+
+curr_xl =
+
+      0.89375       1.4937
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.428       209.57
+
+
+ans =
+
+      -30.428       209.57
+
+Bottom Deleted.
+
+ans =
+
+          0.9            1          1.1          1.2          1.3          1.4
+
+
+curr_xl =
+
+      0.90625       1.5062
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.38       209.62
+
+
+ans =
+
+       -30.38       209.62
+
+Bottom Deleted.
+
+ans =
+
+            1          1.1          1.2          1.3          1.4          1.5
+
+
+curr_xl =
+
+      0.91875       1.5188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.384       209.62
+
+
+ans =
+
+      -30.384       209.62
+
+Bottom Deleted.
+
+ans =
+
+            1          1.1          1.2          1.3          1.4          1.5
+
+
+curr_xl =
+
+        0.925        1.525
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.35       209.65
+
+
+ans =
+
+       -30.35       209.65
+
+Bottom Deleted.
+
+ans =
+
+            1          1.1          1.2          1.3          1.4          1.5
+
+
+curr_xl =
+
+      0.94375       1.5438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.41       209.59
+
+
+ans =
+
+       -30.41       209.59
+
+Bottom Deleted.
+
+ans =
+
+            1          1.1          1.2          1.3          1.4          1.5
+
+
+curr_xl =
+
+      0.95625       1.5562
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.414       209.59
+
+
+ans =
+
+      -30.414       209.59
+
+Bottom Deleted.
+
+ans =
+
+            1          1.1          1.2          1.3          1.4          1.5
+
+
+curr_xl =
+
+      0.96875       1.5687
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.484       209.52
+
+
+ans =
+
+      -30.484       209.52
+
+Bottom Deleted.
+
+ans =
+
+            1          1.1          1.2          1.3          1.4          1.5
+
+
+curr_xl =
+
+      0.98125       1.5813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.416       209.58
+
+
+ans =
+
+      -30.416       209.58
+
+Bottom Deleted.
+
+ans =
+
+            1          1.1          1.2          1.3          1.4          1.5
+
+
+curr_xl =
+
+      0.99375       1.5938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.392       209.61
+
+
+ans =
+
+      -30.392       209.61
+
+Bottom Deleted.
+
+ans =
+
+            1          1.1          1.2          1.3          1.4          1.5
+
+
+curr_xl =
+
+       1.0063       1.6063
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.366       209.63
+
+
+ans =
+
+      -30.366       209.63
+
+Bottom Deleted.
+
+ans =
+
+          1.1          1.2          1.3          1.4          1.5          1.6
+
+
+curr_xl =
+
+       1.0187       1.6187
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.369       209.63
+
+
+ans =
+
+      -30.369       209.63
+
+Bottom Deleted.
+
+ans =
+
+          1.1          1.2          1.3          1.4          1.5          1.6
+
+
+curr_xl =
+
+       1.0313       1.6312
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.395       209.61
+
+
+ans =
+
+      -30.395       209.61
+
+Bottom Deleted.
+
+ans =
+
+          1.1          1.2          1.3          1.4          1.5          1.6
+
+
+curr_xl =
+
+       1.0438       1.6438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.339       209.66
+
+
+ans =
+
+      -30.339       209.66
+
+Bottom Deleted.
+
+ans =
+
+          1.1          1.2          1.3          1.4          1.5          1.6
+
+
+curr_xl =
+
+       1.0562       1.6563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.326       209.67
+
+
+ans =
+
+      -30.326       209.67
+
+Bottom Deleted.
+
+ans =
+
+          1.1          1.2          1.3          1.4          1.5          1.6
+
+
+curr_xl =
+
+       1.0688       1.6688
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.357       209.64
+
+
+ans =
+
+      -30.357       209.64
+
+Bottom Deleted.
+
+ans =
+
+          1.1          1.2          1.3          1.4          1.5          1.6
+
+
+curr_xl =
+
+       1.0812       1.6812
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.368       209.63
+
+
+ans =
+
+      -30.368       209.63
+
+Bottom Deleted.
+
+ans =
+
+          1.1          1.2          1.3          1.4          1.5          1.6
+
+
+curr_xl =
+
+       1.0812       1.6812
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.392       209.61
+
+
+ans =
+
+      -30.392       209.61
+
+Bottom Deleted.
+
+ans =
+
+          1.1          1.2          1.3          1.4          1.5          1.6
+
+
+curr_xl =
+
+       1.0938       1.6937
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.411       209.59
+
+
+ans =
+
+      -30.411       209.59
+
+Bottom Deleted.
+
+ans =
+
+          1.1          1.2          1.3          1.4          1.5          1.6
+
+
+curr_xl =
+
+          1.1          1.7
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.417       209.58
+
+
+ans =
+
+      -30.417       209.58
+
+Bottom Deleted.
+
+ans =
+
+  Columns 1 through 6
+
+          1.1          1.2          1.3          1.4          1.5          1.6
+
+  Column 7
+
+          1.7
+
+
+curr_xl =
+
+       1.1187       1.7188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.367       209.63
+
+
+ans =
+
+      -30.367       209.63
+
+Bottom Deleted.
+
+ans =
+
+          1.2          1.3          1.4          1.5          1.6          1.7
+
+
+curr_xl =
+
+        1.125        1.725
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.356       209.64
+
+
+ans =
+
+      -30.356       209.64
+
+Bottom Deleted.
+
+ans =
+
+          1.2          1.3          1.4          1.5          1.6          1.7
+
+
+curr_xl =
+
+       1.1313       1.7313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.351       209.65
+
+
+ans =
+
+      -30.351       209.65
+
+Bottom Deleted.
+
+ans =
+
+          1.2          1.3          1.4          1.5          1.6          1.7
+
+
+curr_xl =
+
+       1.1375       1.7375
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.384       209.62
+
+
+ans =
+
+      -30.384       209.62
+
+Bottom Deleted.
+
+ans =
+
+          1.2          1.3          1.4          1.5          1.6          1.7
+
+
+curr_xl =
+
+       1.1438       1.7438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.418       209.58
+
+
+ans =
+
+      -30.418       209.58
+
+Bottom Deleted.
+
+ans =
+
+          1.2          1.3          1.4          1.5          1.6          1.7
+
+
+curr_xl =
+
+         1.15         1.75
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.436       209.56
+
+
+ans =
+
+      -30.436       209.56
+
+Bottom Deleted.
+
+ans =
+
+          1.2          1.3          1.4          1.5          1.6          1.7
+
+
+curr_xl =
+
+       1.1563       1.7562
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.419       209.58
+
+
+ans =
+
+      -30.419       209.58
+
+Bottom Deleted.
+
+ans =
+
+          1.2          1.3          1.4          1.5          1.6          1.7
+
+
+curr_xl =
+
+       1.1625       1.7625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.386       209.61
+
+
+ans =
+
+      -30.386       209.61
+
+Bottom Deleted.
+
+ans =
+
+          1.2          1.3          1.4          1.5          1.6          1.7
+
+
+curr_xl =
+
+       1.1688       1.7688
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.471       209.53
+
+
+ans =
+
+      -30.471       209.53
+
+Bottom Deleted.
+
+ans =
+
+          1.2          1.3          1.4          1.5          1.6          1.7
+
+
+curr_xl =
+
+        1.175        1.775
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.432       209.57
+
+
+ans =
+
+      -30.432       209.57
+
+Bottom Deleted.
+
+ans =
+
+          1.2          1.3          1.4          1.5          1.6          1.7
+
+
+curr_xl =
+
+       1.1812       1.7813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.446       209.55
+
+
+ans =
+
+      -30.446       209.55
+
+Bottom Deleted.
+
+ans =
+
+          1.2          1.3          1.4          1.5          1.6          1.7
+
+
+curr_xl =
+
+       1.1875       1.7875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.447       209.55
+
+
+ans =
+
+      -30.447       209.55
+
+Bottom Deleted.
+
+ans =
+
+          1.2          1.3          1.4          1.5          1.6          1.7
+
+
+curr_xl =
+
+       1.1938       1.7938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.437       209.56
+
+
+ans =
+
+      -30.437       209.56
+
+Bottom Deleted.
+
+ans =
+
+          1.2          1.3          1.4          1.5          1.6          1.7
+
+
+curr_xl =
+
+          1.2          1.8
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.36       209.64
+
+
+ans =
+
+       -30.36       209.64
+
+Bottom Deleted.
+
+ans =
+
+          1.3          1.4          1.5          1.6          1.7          1.8
+
+
+curr_xl =
+
+       1.2063       1.8063
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.396        209.6
+
+
+ans =
+
+      -30.396        209.6
+
+Bottom Deleted.
+
+ans =
+
+          1.3          1.4          1.5          1.6          1.7          1.8
+
+
+curr_xl =
+
+       1.2125       1.8125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.408       209.59
+
+
+ans =
+
+      -30.408       209.59
+
+Bottom Deleted.
+
+ans =
+
+          1.3          1.4          1.5          1.6          1.7          1.8
+
+
+curr_xl =
+
+       1.2188       1.8187
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.375       209.63
+
+
+ans =
+
+      -30.375       209.63
+
+Bottom Deleted.
+
+ans =
+
+          1.3          1.4          1.5          1.6          1.7          1.8
+
+
+curr_xl =
+
+        1.225        1.825
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.363       209.64
+
+
+ans =
+
+      -30.363       209.64
+
+Bottom Deleted.
+
+ans =
+
+          1.3          1.4          1.5          1.6          1.7          1.8
+
+
+curr_xl =
+
+       1.2313       1.8313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.462       209.54
+
+
+ans =
+
+      -30.462       209.54
+
+Bottom Deleted.
+
+ans =
+
+          1.3          1.4          1.5          1.6          1.7          1.8
+
+
+curr_xl =
+
+       1.2313       1.8313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.433       209.57
+
+
+ans =
+
+      -30.433       209.57
+
+Bottom Deleted.
+
+ans =
+
+          1.3          1.4          1.5          1.6          1.7          1.8
+
+
+curr_xl =
+
+       1.2437       1.8438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.445       209.55
+
+
+ans =
+
+      -30.445       209.55
+
+Bottom Deleted.
+
+ans =
+
+          1.3          1.4          1.5          1.6          1.7          1.8
+
+
+curr_xl =
+
+         1.25         1.85
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.428       209.57
+
+
+ans =
+
+      -30.428       209.57
+
+Bottom Deleted.
+
+ans =
+
+          1.3          1.4          1.5          1.6          1.7          1.8
+
+
+curr_xl =
+
+       1.2563       1.8563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.444       209.56
+
+
+ans =
+
+      -30.444       209.56
+
+Bottom Deleted.
+
+ans =
+
+          1.3          1.4          1.5          1.6          1.7          1.8
+
+
+curr_xl =
+
+       1.4188       2.0188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.406       209.59
+
+
+ans =
+
+      -30.406       209.59
+
+Bottom Deleted.
+
+ans =
+
+          1.5          1.6          1.7          1.8          1.9            2
+
+
+curr_xl =
+
+       1.4312       2.0313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.371       209.63
+
+
+ans =
+
+      -30.371       209.63
+
+Bottom Deleted.
+
+ans =
+
+          1.5          1.6          1.7          1.8          1.9            2
+
+
+curr_xl =
+
+       1.4438       2.0438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.336       209.66
+
+
+ans =
+
+      -30.336       209.66
+
+Bottom Deleted.
+
+ans =
+
+          1.5          1.6          1.7          1.8          1.9            2
+
+
+curr_xl =
+
+       1.4563       2.0563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.269       209.73
+
+
+ans =
+
+      -30.269       209.73
+
+Bottom Deleted.
+
+ans =
+
+          1.5          1.6          1.7          1.8          1.9            2
+
+
+curr_xl =
+
+       1.4688       2.0688
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.281       209.72
+
+
+ans =
+
+      -30.281       209.72
+
+Bottom Deleted.
+
+ans =
+
+          1.5          1.6          1.7          1.8          1.9            2
+
+
+curr_xl =
+
+       1.4813       2.0813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.266       209.73
+
+
+ans =
+
+      -30.266       209.73
+
+Bottom Deleted.
+
+ans =
+
+          1.5          1.6          1.7          1.8          1.9            2
+
+
+curr_xl =
+
+       1.4937       2.0938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.261       209.74
+
+
+ans =
+
+      -30.261       209.74
+
+Bottom Deleted.
+
+ans =
+
+          1.5          1.6          1.7          1.8          1.9            2
+
+
+curr_xl =
+
+       1.5063       2.1063
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.313       209.69
+
+
+ans =
+
+      -30.313       209.69
+
+Bottom Deleted.
+
+ans =
+
+          1.6          1.7          1.8          1.9            2          2.1
+
+
+curr_xl =
+
+       1.5188       2.1188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.247       209.75
+
+
+ans =
+
+      -30.247       209.75
+
+Bottom Deleted.
+
+ans =
+
+          1.6          1.7          1.8          1.9            2          2.1
+
+
+curr_xl =
+
+       1.5313       2.1313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.229       209.77
+
+
+ans =
+
+      -30.229       209.77
+
+Bottom Deleted.
+
+ans =
+
+          1.6          1.7          1.8          1.9            2          2.1
+
+
+curr_xl =
+
+       1.5438       2.1438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.245       209.76
+
+
+ans =
+
+      -30.245       209.76
+
+Bottom Deleted.
+
+ans =
+
+          1.6          1.7          1.8          1.9            2          2.1
+
+
+curr_xl =
+
+       1.5562       2.1563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.307       209.69
+
+
+ans =
+
+      -30.307       209.69
+
+Bottom Deleted.
+
+ans =
+
+          1.6          1.7          1.8          1.9            2          2.1
+
+
+curr_xl =
+
+       1.5625       2.1625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.328       209.67
+
+
+ans =
+
+      -30.328       209.67
+
+Bottom Deleted.
+
+ans =
+
+          1.6          1.7          1.8          1.9            2          2.1
+
+
+curr_xl =
+
+       1.5688       2.1688
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.38       209.62
+
+
+ans =
+
+       -30.38       209.62
+
+Bottom Deleted.
+
+ans =
+
+          1.6          1.7          1.8          1.9            2          2.1
+
+
+curr_xl =
+
+        1.575        2.175
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.387       209.61
+
+
+ans =
+
+      -30.387       209.61
+
+Bottom Deleted.
+
+ans =
+
+          1.6          1.7          1.8          1.9            2          2.1
+
+
+curr_xl =
+
+       1.5813       2.1813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.408       209.59
+
+
+ans =
+
+      -30.408       209.59
+
+Bottom Deleted.
+
+ans =
+
+          1.6          1.7          1.8          1.9            2          2.1
+
+
+curr_xl =
+
+       1.5875       2.1875
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.513       209.49
+
+
+ans =
+
+      -30.513       209.49
+
+Bottom Deleted.
+
+ans =
+
+          1.6          1.7          1.8          1.9            2          2.1
+
+
+curr_xl =
+
+       1.5938       2.1938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.554       209.45
+
+
+ans =
+
+      -30.554       209.45
+
+Bottom Deleted.
+
+ans =
+
+          1.6          1.7          1.8          1.9            2          2.1
+
+
+curr_xl =
+
+          1.6          2.2
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.511       209.49
+
+
+ans =
+
+      -30.511       209.49
+
+Bottom Deleted.
+
+ans =
+
+  Columns 1 through 6
+
+          1.6          1.7          1.8          1.9            2          2.1
+
+  Column 7
+
+          2.2
+
+
+curr_xl =
+
+       1.6063       2.2063
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.579       209.42
+
+
+ans =
+
+      -30.579       209.42
+
+Bottom Deleted.
+
+ans =
+
+          1.7          1.8          1.9            2          2.1          2.2
+
+
+curr_xl =
+
+       1.6125       2.2125
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.548       209.45
+
+
+ans =
+
+      -30.548       209.45
+
+Bottom Deleted.
+
+ans =
+
+          1.7          1.8          1.9            2          2.1          2.2
+
+
+curr_xl =
+
+       1.6187       2.2188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.571       209.43
+
+
+ans =
+
+      -30.571       209.43
+
+Bottom Deleted.
+
+ans =
+
+          1.7          1.8          1.9            2          2.1          2.2
+
+
+curr_xl =
+
+       1.6938       2.2938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.581       209.42
+
+
+ans =
+
+      -30.581       209.42
+
+Bottom Deleted.
+
+ans =
+
+          1.7          1.8          1.9            2          2.1          2.2
+
+
+curr_xl =
+
+       1.7063       2.3063
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.588       209.41
+
+
+ans =
+
+      -30.588       209.41
+
+Bottom Deleted.
+
+ans =
+
+          1.8          1.9            2          2.1          2.2          2.3
+
+
+curr_xl =
+
+       1.7188       2.3188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.577       209.42
+
+
+ans =
+
+      -30.577       209.42
+
+Bottom Deleted.
+
+ans =
+
+          1.8          1.9            2          2.1          2.2          2.3
+
+
+curr_xl =
+
+       1.7313       2.3313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.531       209.47
+
+
+ans =
+
+      -30.531       209.47
+
+Bottom Deleted.
+
+ans =
+
+          1.8          1.9            2          2.1          2.2          2.3
+
+
+curr_xl =
+
+       1.7437       2.3438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.542       209.46
+
+
+ans =
+
+      -30.542       209.46
+
+Bottom Deleted.
+
+ans =
+
+          1.8          1.9            2          2.1          2.2          2.3
+
+
+curr_xl =
+
+       1.7563       2.3563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.486       209.51
+
+
+ans =
+
+      -30.486       209.51
+
+Bottom Deleted.
+
+ans =
+
+          1.8          1.9            2          2.1          2.2          2.3
+
+
+curr_xl =
+
+       1.7688       2.3688
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.487       209.51
+
+
+ans =
+
+      -30.487       209.51
+
+Bottom Deleted.
+
+ans =
+
+          1.8          1.9            2          2.1          2.2          2.3
+
+
+curr_xl =
+
+       1.7813       2.3813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.437       209.56
+
+
+ans =
+
+      -30.437       209.56
+
+Bottom Deleted.
+
+ans =
+
+          1.8          1.9            2          2.1          2.2          2.3
+
+
+curr_xl =
+
+       1.7938       2.3938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.495        209.5
+
+
+ans =
+
+      -30.495        209.5
+
+Bottom Deleted.
+
+ans =
+
+          1.8          1.9            2          2.1          2.2          2.3
+
+
+curr_xl =
+
+       1.8062       2.4063
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.481       209.52
+
+
+ans =
+
+      -30.481       209.52
+
+Bottom Deleted.
+
+ans =
+
+          1.9            2          2.1          2.2          2.3          2.4
+
+
+curr_xl =
+
+       1.8188       2.4188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.517       209.48
+
+
+ans =
+
+      -30.517       209.48
+
+Bottom Deleted.
+
+ans =
+
+          1.9            2          2.1          2.2          2.3          2.4
+
+
+curr_xl =
+
+       1.8313       2.4313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.533       209.47
+
+
+ans =
+
+      -30.533       209.47
+
+Bottom Deleted.
+
+ans =
+
+          1.9            2          2.1          2.2          2.3          2.4
+
+
+curr_xl =
+
+       1.8438       2.4438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.488       209.51
+
+
+ans =
+
+      -30.488       209.51
+
+Bottom Deleted.
+
+ans =
+
+          1.9            2          2.1          2.2          2.3          2.4
+
+
+curr_xl =
+
+       1.8563       2.4563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.544       209.46
+
+
+ans =
+
+      -30.544       209.46
+
+Bottom Deleted.
+
+ans =
+
+          1.9            2          2.1          2.2          2.3          2.4
+
+
+curr_xl =
+
+       1.8687       2.4688
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.615       209.39
+
+
+ans =
+
+      -30.615       209.39
+
+Bottom Deleted.
+
+ans =
+
+          1.9            2          2.1          2.2          2.3          2.4
+
+
+curr_xl =
+
+       1.8813       2.4813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.526       209.47
+
+
+ans =
+
+      -30.526       209.47
+
+Bottom Deleted.
+
+ans =
+
+          1.9            2          2.1          2.2          2.3          2.4
+
+
+curr_xl =
+
+       1.8938       2.4938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.521       209.48
+
+
+ans =
+
+      -30.521       209.48
+
+Bottom Deleted.
+
+ans =
+
+          1.9            2          2.1          2.2          2.3          2.4
+
+
+curr_xl =
+
+       1.9063       2.5063
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.48       209.52
+
+
+ans =
+
+       -30.48       209.52
+
+Bottom Deleted.
+
+ans =
+
+            2          2.1          2.2          2.3          2.4          2.5
+
+
+curr_xl =
+
+       1.9188       2.5188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.472       209.53
+
+
+ans =
+
+      -30.472       209.53
+
+Bottom Deleted.
+
+ans =
+
+            2          2.1          2.2          2.3          2.4          2.5
+
+
+curr_xl =
+
+       1.9312       2.5313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.519       209.48
+
+
+ans =
+
+      -30.519       209.48
+
+Bottom Deleted.
+
+ans =
+
+            2          2.1          2.2          2.3          2.4          2.5
+
+
+curr_xl =
+
+       1.9438       2.5438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.504        209.5
+
+
+ans =
+
+      -30.504        209.5
+
+Bottom Deleted.
+
+ans =
+
+            2          2.1          2.2          2.3          2.4          2.5
+
+
+curr_xl =
+
+       1.9563       2.5563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.573       209.43
+
+
+ans =
+
+      -30.573       209.43
+
+Bottom Deleted.
+
+ans =
+
+            2          2.1          2.2          2.3          2.4          2.5
+
+
+curr_xl =
+
+       1.9688       2.5688
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.514       209.49
+
+
+ans =
+
+      -30.514       209.49
+
+Bottom Deleted.
+
+ans =
+
+            2          2.1          2.2          2.3          2.4          2.5
+
+
+curr_xl =
+
+       1.9813       2.5813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.495       209.51
+
+
+ans =
+
+      -30.495       209.51
+
+Bottom Deleted.
+
+ans =
+
+            2          2.1          2.2          2.3          2.4          2.5
+
+
+curr_xl =
+
+       1.9937       2.5938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.517       209.48
+
+
+ans =
+
+      -30.517       209.48
+
+Bottom Deleted.
+
+ans =
+
+            2          2.1          2.2          2.3          2.4          2.5
+
+
+curr_xl =
+
+       2.0063       2.6063
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.559       209.44
+
+
+ans =
+
+      -30.559       209.44
+
+Bottom Deleted.
+
+ans =
+
+          2.1          2.2          2.3          2.4          2.5          2.6
+
+
+curr_xl =
+
+       2.0188       2.6188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.491       209.51
+
+
+ans =
+
+      -30.491       209.51
+
+Bottom Deleted.
+
+ans =
+
+          2.1          2.2          2.3          2.4          2.5          2.6
+
+
+curr_xl =
+
+       2.0313       2.6313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.541       209.46
+
+
+ans =
+
+      -30.541       209.46
+
+Bottom Deleted.
+
+ans =
+
+          2.1          2.2          2.3          2.4          2.5          2.6
+
+
+curr_xl =
+
+       2.0438       2.6438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.516       209.48
+
+
+ans =
+
+      -30.516       209.48
+
+Bottom Deleted.
+
+ans =
+
+          2.1          2.2          2.3          2.4          2.5          2.6
+
+
+curr_xl =
+
+       2.0562       2.6563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.48       209.52
+
+
+ans =
+
+       -30.48       209.52
+
+Bottom Deleted.
+
+ans =
+
+          2.1          2.2          2.3          2.4          2.5          2.6
+
+
+curr_xl =
+
+       2.0688       2.6688
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.466       209.53
+
+
+ans =
+
+      -30.466       209.53
+
+Bottom Deleted.
+
+ans =
+
+          2.1          2.2          2.3          2.4          2.5          2.6
+
+
+curr_xl =
+
+       2.0813       2.6813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.436       209.56
+
+
+ans =
+
+      -30.436       209.56
+
+Bottom Deleted.
+
+ans =
+
+          2.1          2.2          2.3          2.4          2.5          2.6
+
+
+curr_xl =
+
+       2.0938       2.6938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.46       209.54
+
+
+ans =
+
+       -30.46       209.54
+
+Bottom Deleted.
+
+ans =
+
+          2.1          2.2          2.3          2.4          2.5          2.6
+
+
+curr_xl =
+
+       2.1063       2.7063
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.448       209.55
+
+
+ans =
+
+      -30.448       209.55
+
+Bottom Deleted.
+
+ans =
+
+          2.2          2.3          2.4          2.5          2.6          2.7
+
+
+curr_xl =
+
+       2.1187       2.7188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.415       209.59
+
+
+ans =
+
+      -30.415       209.59
+
+Bottom Deleted.
+
+ans =
+
+          2.2          2.3          2.4          2.5          2.6          2.7
+
+
+curr_xl =
+
+       2.1313       2.7313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.451       209.55
+
+
+ans =
+
+      -30.451       209.55
+
+Bottom Deleted.
+
+ans =
+
+          2.2          2.3          2.4          2.5          2.6          2.7
+
+
+curr_xl =
+
+       2.1438       2.7438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.447       209.55
+
+
+ans =
+
+      -30.447       209.55
+
+Bottom Deleted.
+
+ans =
+
+          2.2          2.3          2.4          2.5          2.6          2.7
+
+
+curr_xl =
+
+       2.1563       2.7563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.435       209.57
+
+
+ans =
+
+      -30.435       209.57
+
+Bottom Deleted.
+
+ans =
+
+          2.2          2.3          2.4          2.5          2.6          2.7
+
+
+curr_xl =
+
+       2.1688       2.7688
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.47       209.53
+
+
+ans =
+
+       -30.47       209.53
+
+Bottom Deleted.
+
+ans =
+
+          2.2          2.3          2.4          2.5          2.6          2.7
+
+
+curr_xl =
+
+       2.1812       2.7813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.431       209.57
+
+
+ans =
+
+      -30.431       209.57
+
+Bottom Deleted.
+
+ans =
+
+          2.2          2.3          2.4          2.5          2.6          2.7
+
+
+curr_xl =
+
+       2.1938       2.7938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.433       209.57
+
+
+ans =
+
+      -30.433       209.57
+
+Bottom Deleted.
+
+ans =
+
+          2.2          2.3          2.4          2.5          2.6          2.7
+
+
+curr_xl =
+
+       2.2063       2.8063
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.443       209.56
+
+
+ans =
+
+      -30.443       209.56
+
+Bottom Deleted.
+
+ans =
+
+          2.3          2.4          2.5          2.6          2.7          2.8
+
+
+curr_xl =
+
+       2.2188       2.8188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.452       209.55
+
+
+ans =
+
+      -30.452       209.55
+
+Bottom Deleted.
+
+ans =
+
+          2.3          2.4          2.5          2.6          2.7          2.8
+
+
+curr_xl =
+
+       2.2313       2.8313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.373       209.63
+
+
+ans =
+
+      -30.373       209.63
+
+Bottom Deleted.
+
+ans =
+
+          2.3          2.4          2.5          2.6          2.7          2.8
+
+
+curr_xl =
+
+       2.2437       2.8438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.366       209.63
+
+
+ans =
+
+      -30.366       209.63
+
+Bottom Deleted.
+
+ans =
+
+          2.3          2.4          2.5          2.6          2.7          2.8
+
+
+curr_xl =
+
+       2.2563       2.8563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.357       209.64
+
+
+ans =
+
+      -30.357       209.64
+
+Bottom Deleted.
+
+ans =
+
+          2.3          2.4          2.5          2.6          2.7          2.8
+
+
+curr_xl =
+
+       2.2688       2.8688
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.401        209.6
+
+
+ans =
+
+      -30.401        209.6
+
+Bottom Deleted.
+
+ans =
+
+          2.3          2.4          2.5          2.6          2.7          2.8
+
+
+curr_xl =
+
+       2.2813       2.8813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.397        209.6
+
+
+ans =
+
+      -30.397        209.6
+
+Bottom Deleted.
+
+ans =
+
+          2.3          2.4          2.5          2.6          2.7          2.8
+
+
+curr_xl =
+
+       2.2938       2.8938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.383       209.62
+
+
+ans =
+
+      -30.383       209.62
+
+Bottom Deleted.
+
+ans =
+
+          2.3          2.4          2.5          2.6          2.7          2.8
+
+
+curr_xl =
+
+       2.3062       2.9063
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.391       209.61
+
+
+ans =
+
+      -30.391       209.61
+
+Bottom Deleted.
+
+ans =
+
+          2.4          2.5          2.6          2.7          2.8          2.9
+
+
+curr_xl =
+
+       2.3188       2.9188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.368       209.63
+
+
+ans =
+
+      -30.368       209.63
+
+Bottom Deleted.
+
+ans =
+
+          2.4          2.5          2.6          2.7          2.8          2.9
+
+
+curr_xl =
+
+       2.3313       2.9313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.422       209.58
+
+
+ans =
+
+      -30.422       209.58
+
+Bottom Deleted.
+
+ans =
+
+          2.4          2.5          2.6          2.7          2.8          2.9
+
+
+curr_xl =
+
+       2.3438       2.9438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.433       209.57
+
+
+ans =
+
+      -30.433       209.57
+
+Bottom Deleted.
+
+ans =
+
+          2.4          2.5          2.6          2.7          2.8          2.9
+
+
+curr_xl =
+
+       2.3563       2.9563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.485       209.52
+
+
+ans =
+
+      -30.485       209.52
+
+Bottom Deleted.
+
+ans =
+
+          2.4          2.5          2.6          2.7          2.8          2.9
+
+
+curr_xl =
+
+       2.3687       2.9688
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.508       209.49
+
+
+ans =
+
+      -30.508       209.49
+
+Bottom Deleted.
+
+ans =
+
+          2.4          2.5          2.6          2.7          2.8          2.9
+
+
+curr_xl =
+
+       2.3813       2.9813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.48       209.52
+
+
+ans =
+
+       -30.48       209.52
+
+Bottom Deleted.
+
+ans =
+
+          2.4          2.5          2.6          2.7          2.8          2.9
+
+
+curr_xl =
+
+       2.3938       2.9938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.442       209.56
+
+
+ans =
+
+      -30.442       209.56
+
+Bottom Deleted.
+
+ans =
+
+          2.4          2.5          2.6          2.7          2.8          2.9
+
+
+curr_xl =
+
+       2.4063       3.0063
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.447       209.55
+
+
+ans =
+
+      -30.447       209.55
+
+Bottom Deleted.
+
+ans =
+
+          2.5          2.6          2.7          2.8          2.9            3
+
+
+curr_xl =
+
+       2.4188       3.0188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.488       209.51
+
+
+ans =
+
+      -30.488       209.51
+
+Bottom Deleted.
+
+ans =
+
+          2.5          2.6          2.7          2.8          2.9            3
+
+
+curr_xl =
+
+       2.4312       3.0313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.44       209.56
+
+
+ans =
+
+       -30.44       209.56
+
+Bottom Deleted.
+
+ans =
+
+          2.5          2.6          2.7          2.8          2.9            3
+
+
+curr_xl =
+
+       2.4438       3.0438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.556       209.44
+
+
+ans =
+
+      -30.556       209.44
+
+Bottom Deleted.
+
+ans =
+
+          2.5          2.6          2.7          2.8          2.9            3
+
+
+curr_xl =
+
+       2.4563       3.0563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.541       209.46
+
+
+ans =
+
+      -30.541       209.46
+
+Bottom Deleted.
+
+ans =
+
+          2.5          2.6          2.7          2.8          2.9            3
+
+
+curr_xl =
+
+       2.4688       3.0688
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.586       209.41
+
+
+ans =
+
+      -30.586       209.41
+
+Bottom Deleted.
+
+ans =
+
+          2.5          2.6          2.7          2.8          2.9            3
+
+
+curr_xl =
+
+       2.4813       3.0813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.535       209.47
+
+
+ans =
+
+      -30.535       209.47
+
+Bottom Deleted.
+
+ans =
+
+          2.5          2.6          2.7          2.8          2.9            3
+
+
+curr_xl =
+
+       2.4937       3.0938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.521       209.48
+
+
+ans =
+
+      -30.521       209.48
+
+Bottom Deleted.
+
+ans =
+
+          2.5          2.6          2.7          2.8          2.9            3
+
+
+curr_xl =
+
+       2.5063       3.1063
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.583       209.42
+
+
+ans =
+
+      -30.583       209.42
+
+Bottom Deleted.
+
+ans =
+
+          2.6          2.7          2.8          2.9            3          3.1
+
+
+curr_xl =
+
+       2.5188       3.1188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.542       209.46
+
+
+ans =
+
+      -30.542       209.46
+
+Bottom Deleted.
+
+ans =
+
+          2.6          2.7          2.8          2.9            3          3.1
+
+
+curr_xl =
+
+       2.5313       3.1313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.444       209.56
+
+
+ans =
+
+      -30.444       209.56
+
+Bottom Deleted.
+
+ans =
+
+          2.6          2.7          2.8          2.9            3          3.1
+
+
+curr_xl =
+
+       2.5438       3.1438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.441       209.56
+
+
+ans =
+
+      -30.441       209.56
+
+Bottom Deleted.
+
+ans =
+
+          2.6          2.7          2.8          2.9            3          3.1
+
+
+curr_xl =
+
+       2.5562       3.1563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.459       209.54
+
+
+ans =
+
+      -30.459       209.54
+
+Bottom Deleted.
+
+ans =
+
+          2.6          2.7          2.8          2.9            3          3.1
+
+
+curr_xl =
+
+       2.5688       3.1688
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.444       209.56
+
+
+ans =
+
+      -30.444       209.56
+
+Bottom Deleted.
+
+ans =
+
+          2.6          2.7          2.8          2.9            3          3.1
+
+
+curr_xl =
+
+       2.5813       3.1813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.478       209.52
+
+
+ans =
+
+      -30.478       209.52
+
+Bottom Deleted.
+
+ans =
+
+          2.6          2.7          2.8          2.9            3          3.1
+
+
+curr_xl =
+
+       2.5938       3.1938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.406       209.59
+
+
+ans =
+
+      -30.406       209.59
+
+Bottom Deleted.
+
+ans =
+
+          2.6          2.7          2.8          2.9            3          3.1
+
+
+curr_xl =
+
+       2.6063       3.2063
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.404        209.6
+
+
+ans =
+
+      -30.404        209.6
+
+Bottom Deleted.
+
+ans =
+
+          2.7          2.8          2.9            3          3.1          3.2
+
+
+curr_xl =
+
+       2.6187       3.2188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.404        209.6
+
+
+ans =
+
+      -30.404        209.6
+
+Bottom Deleted.
+
+ans =
+
+          2.7          2.8          2.9            3          3.1          3.2
+
+
+curr_xl =
+
+       2.6313       3.2313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.421       209.58
+
+
+ans =
+
+      -30.421       209.58
+
+Bottom Deleted.
+
+ans =
+
+          2.7          2.8          2.9            3          3.1          3.2
+
+
+curr_xl =
+
+       2.6438       3.2438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.432       209.57
+
+
+ans =
+
+      -30.432       209.57
+
+Bottom Deleted.
+
+ans =
+
+          2.7          2.8          2.9            3          3.1          3.2
+
+
+curr_xl =
+
+       2.6563       3.2563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.351       209.65
+
+
+ans =
+
+      -30.351       209.65
+
+Bottom Deleted.
+
+ans =
+
+          2.7          2.8          2.9            3          3.1          3.2
+
+
+curr_xl =
+
+       2.6688       3.2688
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.404        209.6
+
+
+ans =
+
+      -30.404        209.6
+
+Bottom Deleted.
+
+ans =
+
+          2.7          2.8          2.9            3          3.1          3.2
+
+
+curr_xl =
+
+       2.6812       3.2813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.443       209.56
+
+
+ans =
+
+      -30.443       209.56
+
+Bottom Deleted.
+
+ans =
+
+          2.7          2.8          2.9            3          3.1          3.2
+
+
+curr_xl =
+
+       2.6938       3.2938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.495       209.51
+
+
+ans =
+
+      -30.495       209.51
+
+Bottom Deleted.
+
+ans =
+
+          2.7          2.8          2.9            3          3.1          3.2
+
+
+curr_xl =
+
+       2.7063       3.3063
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.379       209.62
+
+
+ans =
+
+      -30.379       209.62
+
+Bottom Deleted.
+
+ans =
+
+          2.8          2.9            3          3.1          3.2          3.3
+
+
+curr_xl =
+
+       2.7188       3.3188
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.427       209.57
+
+
+ans =
+
+      -30.427       209.57
+
+Bottom Deleted.
+
+ans =
+
+          2.8          2.9            3          3.1          3.2          3.3
+
+
+curr_xl =
+
+       2.7313       3.3313
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.479       209.52
+
+
+ans =
+
+      -30.479       209.52
+
+Bottom Deleted.
+
+ans =
+
+          2.8          2.9            3          3.1          3.2          3.3
+
+
+curr_xl =
+
+       2.7437       3.3438
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+       -30.44       209.56
+
+
+ans =
+
+       -30.44       209.56
+
+Bottom Deleted.
+
+ans =
+
+          2.8          2.9            3          3.1          3.2          3.3
+
+
+curr_xl =
+
+       2.7563       3.3563
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.578       209.42
+
+
+ans =
+
+      -30.578       209.42
+
+Bottom Deleted.
+
+ans =
+
+          2.8          2.9            3          3.1          3.2          3.3
+
+
+curr_xl =
+
+       2.7625       3.3625
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.691       209.31
+
+
+ans =
+
+      -30.691       209.31
+
+Bottom Deleted.
+
+ans =
+
+          2.8          2.9            3          3.1          3.2          3.3
+
+
+curr_xl =
+
+       2.7813       3.3813
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.509       209.49
+
+
+ans =
+
+      -30.509       209.49
+
+Bottom Deleted.
+
+ans =
+
+          2.8          2.9            3          3.1          3.2          3.3
+
+
+curr_xl =
+
+       2.7938       3.3938
+
+
+ans =
+
+   7.3579e+05
+
+Bound Range: 240&deg;
+
+ans =
+
+      -30.164       209.84
+
+
+ans =
+
+      -30.164       209.84
+
+Bottom Deleted.
+
+ans =
+
+          2.8          2.9            3          3.1          3.2          3.3
+
+
+curr_xl =
+
+       2.8062       3.4063
+
+</pre><img vspace="5" hspace="5" src="urgread_01.png" alt=""> <img vspace="5" hspace="5" src="urgread_02.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+clc
+close all hidden
+colordef black
+% clear ipd_struct
+clear
+profile off
+% urg_file        = 'test.ubh'
+old_folder      = pwd 
+data_folder     = 'C:\Users\bclymer\Downloads'
+data_folder     = 'P:\Dropbox (Future Scan)\Flyswatter (1)\Testing'
+% data_folder     = old_folder
+
+%% 
+%% 
+if ~exist( 'urg_file' , 'var' )
+    cd( data_folder )
+    [ fn , pn ]	= uigetfile( '*.ubh' , 'Select UrgBenri LiDAR data file' )
+    urg_file    = fullfile( pn , fn )
+end
+                  fclose( 'all' )
+fid             = fopen( urg_file )
+
+if ~exist( 'urg_struct' , 'var' ) 
+    disp( 'Reading Raw UrgBenri File' )
+    cd( old_folder )
+    urg_struct      = urg_struct_read( fid ) 
+    disp( 'Raw URG file has been read' )
+end
+% 
+if ~exist( 'ipd_file' , 'var' )
+    cd( data_folder )
+    [ fu , pu , iu ]	= uigetfile( fullfile( pn , '*.ipd' ) , 'Select HD index file' )
+    ipd_file            = fullfile( pu , fu )
+end
+
+if fu
+    ipd_fid         = fopen( ipd_file )
+    
+    if ~exist( 'ipd_struct' , 'var' )
+        disp( 'Reading Raw IPD File' )
+        cd( old_folder )
+        ipd_struct   = ipd_reader( ipd_file , urg_struct( 1 ).date_vec )
+        disp( 'Raw IPD file has been read' )
+    end
+else
+    spoofed.ft  = ( 0 : ( numel( urg_struct ) -1 ) ) / 80                   ;
+    ipd_struct	= struct( 'ft' ,  spoofed.ft  , 'clock' , [ urg_struct.timeStamp ] , 'num_scans' , size( urg_struct , 1 ) )	;
+    disp( 'IPD struct spoofed.' )
+    cd( old_folder )
+end
+
+                  fclose( 'all' )
+
+urg_ts          = [ urg_struct.timeStamp ]'                                 ;
+ipd_ts          = [ ipd_struct.clock ]                                      ;
+disp( 'Matching distance indeces' )                             
+
+for i = 1 : numel( urg_ts )
+    abs_diff        = ( ipd_ts - urg_ts( i ) ) .^2                          ;
+    ipd_index( i )  = mean( find( abs_diff == min( abs_diff ) , 1 ) )       ;
+end 
+
+urg_ft              = ipd_struct.ft( ipd_index )                            ;
+figure
+h.urg_distance      = plot( urg_ts - min( urg_ts ) , urg_ft )               ;
+title( urg_struct( 1 ).dateString )
+xt                  = get( get( h.urg_distance , 'Parent' ) , 'XTick' )     ;
+xtl                 = datestr( xt , 'MM:SS' )                               ;
+set( get( h.urg_distance , 'Parent' ) , 'XTickLabel' , xtl )                ;
+xlabel( 'Time, minutes:seconds' )
+ylabel( 'Distance, feet ' )
+axis tight
+grid on
+
+% return
+force_filter_gen    = false                                                 ;
+
+if ~exist( 'df.mat' , 'file' ) || force_filter_gen
+disp( 'Generating Spacial Filter' )
+df               = designfilt(   'lowpassfir' ,                             ...
+                                 'DesignMethod' ,           'equiripple' ,	...
+                                 'PassbandFrequency' ,       0.15 ,         ...
+                                 'StopbandFrequency' ,       0.2 ,          ...
+                                 'PassbandRipple' ,          1 ,            ...
+                                 'StopbandAttenuation' ,     60 ,           ...
+                                 'SampleRate' ,              9 )         	;
+
+df
+else
+    load( 'df.mat' ) 
+end
+plot_parabola   = true                                                      ;
+run_calculations= true                                                      ;
+disp_plots      = true                                                      ;
+fit_order    	= 6                                                         ;  
+add_legends     = false                                                     ;
+find_edges      = false                                                     ;
+
+mm_conversion   = 1 / 25.4                                                  ;   % 1mm in inches
+
+angles_deg  	= linspace( -45 , 225 , numel( urg_struct( 1 ).scan ) )     ;   % angles of LiDAR scan, in as many
+                                                                                % points as one scan has                                                                             
+x_weight        = cosd( angles_deg )                                        ;   % pre-calculate the weights of the angles
+y_weight        = sind( angles_deg )                                        ;
+
+angles_rad      = angles_deg  * pi / 180                                    ;   % -45 : 225 in radians
+angle_offset    = +30                                                       ;
+
+pipe_diameter   = 24.9                                                      ;
+float_width     = 13                                                        ;
+pipe_in         = pipe_diameter / 2                                         ;   % pipe radius in inches
+pipe_in_sq      = pipe_in ^ 2                                               ;
+accepted_diff   = .025 * pipe_diameter                                      ;   % inches
+
+pipe_mm         = pipe_in / mm_conversion                                   ;   %  '      '     '  mm
+inner_tol       = .95 * pipe_in                                             ;
+mm_rad          = pipe_mm / 2                                               ;   % pipe radius in mm
+vertex( 1 )     = 90                                                        ;
+vertex( 2 )     = pipe_in                                                   ;
+
+
+filter_order    = 5                                                        ;   % order of the median filter
+filter_roll     = -3                                                         ;   % filter roll-off rate
+filter_raw      = exp( filter_roll * ( filter_order : -1 : 1 )' /filter_order  )       ;   % generate some filter coefficients
+filter_new      = filter_raw / ( sum( filter_raw , 1 ) / 1 )                ;   % normalize coefficients
+filter_mat      = repmat( filter_new , 1 , 3 )                              ;   % matrix of coefficients
+min_rec         = zeros( numel( filter_order ) , 1 )                        ;   % initialize record of minima
+struct_size_vec = cell2mat( arrayfun( @( x ) size( x.scan ) , urg_struct ,  ...
+                           'UniformOutput' , false ) )                      ;   % size of scans. ex: 1081x1 
+bad_scans       = struct_size_vec( : , 1 ) ~= 1081                          ;   % find non-conforming scans
+urg_struct( bad_scans ) = []                                                ;   % remove bad scans
+num_scans       = size( urg_struct , 1  )
+
+%   initialize stuff
+p               = zeros( num_scans , fit_order+1  )         ;
+fit_curve       = zeros( num_scans, 1081 )                  ;
+vertex          = zeros( num_scans, 2 )                     ;
+fit_range       = false( num_scans, 1081 )                  ;
+
+
+
+if ~exist( 'all_x_med' , 'var' )
+    disp( 'Pre-Processing Data' )
+    all_x_weight    = repmat( x_weight , num_scans , 1 )                        ;   % cos( -45 : 0.25 : 1081 )
+    all_y_weight    = repmat( y_weight , num_scans , 1 )                        ;   % sin(  '       '     '  )
+    sz              = size( all_x_weight )                                      ;   
+	raw_data        = double( horzcat( urg_struct.scan )' )                     ;
+    infs            = ( raw_data == 60000 )                                     ;
+    fars            = ( raw_data > ( 2 * pipe_diameter / mm_conversion ) )      ; 
+%     zeros           = ( raw_data == 0 )                                         ;
+    raw_data( infs )= 0                                                         ;
+    raw_data( fars )= 0                                                         ;
+    middle_halo     = ( -20 : 20 ) + 1082/2                                     ;
+    initial_offset  = median( median( raw_data( : , middle_halo ) ) ) *         ...
+                      mm_conversion                                             ;
+	angle_mat       = repmat( angles_rad , sz( 1 ) , 1 )                        ;
+    disp( 'Converting to Polar' )
+    [ x_s , y_s ]   = pol2cart( angle_mat , raw_data )                          ;
+    disp( 'Estimating pipe fit' )
+    circle.x        = pipe_in * x_weight                                        ;
+    circle.y        = pipe_in * y_weight                                        ;
+    data.x          = x_s * mm_conversion                                       ;
+    data.y          = y_s * mm_conversion - initial_offset + pipe_in            ;
+    data.r          = sqrt( data.x .^2 + data.y .^2 )                           ;
+    data.noise      = abs( data.r - pipe_in ) > ( .2 * pipe_in )                ; 
+    all_scans       = double( raw_data ) * mm_conversion                        ;
+    disp( 'De-noising' )
+    
+    nan_value       = 60000 * mm_conversion                                     ;
+    all_scans( infs )= nan_value                                                ;
+    all_scans( fars )= nan_value                                                ;
+    all_scans( all_scans == 0 ) = nan_value                                  	;
+    
+    all_x_raw       = all_scans .* all_x_weight                                 ;
+    all_y_raw       = all_scans .* all_y_weight                                 ;
+    med_rad         = 7                                                         ;
+    med_range       = -med_rad : med_rad                                        ;
+    disp( 'Median Filtering Data (longest portion of pre-processing)' )          
+    all_med         = medfilt2( all_scans , [ 2 * med_rad + 1 , 1 ] )           ;
+    disp( 'Median Filtering Complete.' )
+    all_med( all_med == nan_value ) = nan                                       ;
+    all_scans( all_scans == nan_value ) = nan                                   ;
+%     all_med( data.noise ) = nan                                                 ;
+    all_x_med       = all_med .* all_x_weight                                   ;
+    all_y_med       = all_med .* all_y_weight                                   ;
+    x_guess         = mean( nanmedian( data.x ) )
+    y_guess         = initial_offset - pipe_in
+    R_guess         = pipe_in 
+    par_rec         = repmat( [ x_guess y_guess R_guess ] ,                     ...
+                      size( filter_mat , 1 ) , 1 )                              ;   % initialize record of circle parameters
+    
+    disp( 'Calculating Quantiles for Y-Limits' )
+    quant_tol       = 0.2  
+    if ~exist( 'quants' , 'var' )
+        quants   	= quantile( all_scans( : ) , [ quant_tol 1-quant_tol ] )
+    end
+    disp( 'Pre-Processing of LiDAR Data Complete' )    
+end
+
+z_grid      = meshgrid( 1:size( all_x_med , 1 ) , 1:size( all_x_med , 2 ) )' 	;
+
+h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
+    h.scan      = subplot( 1 , 4 , 1:3 )
+        hold on  
+        med_scan    = nanmedian( all_scans )                                            ;
+        set( gca , 'Color' , [0.0500    0.0750    0.0750] )                        
+        hold on 
+        h.fit_p     = plot( 0 , 0 , 'w' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )	;
+        h.circle    = plot( 0 , 0 , 'y' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 ,    ...
+                                          'Marker' , '.' , 'LineStyle' , 'none' )       ;
+                                      
+        circle_template.x     = pipe_in * x_weight                                      ;
+        circle_template.y     = pipe_in * y_weight                                      ;
+        h.template  = plot( circle_template.x ,                                         ...
+                            circle_template.y ,                                         ...
+                            'Color' , 0.6 * [ 1 1 1 ] ,                                 ...
+                            'LineStyle' , '.' ,                                         ...
+                            'LineSmoothing' , 'on' ,                                    ...
+                            'LineWidth' , 2 ,                                           ...
+                            'Marker' , 'none' ,                                        	...
+                            'LineStyle' , '-' )                                         ;
+        plot( 100 * [ -1 1 ] , [ 0 0 ] , 'Color' , [ 0 0 1 ] , 'LineSmoothing' , 'on' )
+        plot( [ 0 0 ] , 100 * [ -1 1 ] , 'Color' , [ 0 0 1 ] , 'LineSmoothing' , 'on' )
+        axis equal
+        grid on
+        xlabel( 'Inches' )
+        ylabel( 'Inches' )
+        file_title  = urg_file                  ;
+        % file_title( file_title == '_' ) = '-'   ;
+        strrep( file_title , '\' , '\\' )
+        title( file_title  )
+
+        set( gcf, 'Units' , 'Normalized' , 'Numbertitle' , 'Off' , 'Name' , [ 'Fit of Lidar to Pipe ' urg_file ] )
+        xlim( 1.2 * pipe_in * [ -1 1 ] + [ -2 2 ] )
+        ylim_offset                                     = 1
+        ylim( pipe_in * [ -1 1 ] + ylim_offset )
+        if add_legends
+
+        legend( { 'Raw Noisy Data' ,            ...
+                  'Median Filtered' ,           ...
+                  'Shifted',                    ...
+                  'Pipe Fit' ,                  ...
+                  'Pipe Template' } ,           ...
+                  'Location' ,                  ...
+                  'Best' )          ;
+        end
+        
+    h.fit       = subplot( 2 , 4 , 4 )                                                  ;
+        h.bad_filt  = plot( 0 , 0 , 'bx' ,	'LineSmoothing' , 'on' ,                 	...
+                                            'MarkerSize' , 3 ,                          ...
+                                            'LineWidth' , 2 )                           ;     
+                      set( h.bad_filt ,     'MarkerEdgeColor' , 1/255 * [ 119 136 193 ] ...
+                                      ,     'MarkerFaceColor' , 1/255 * [ 198 226 255 ] )
+        hold on                              
+        h.red_filt 	= plot( 0 , 0 , 'r+' , 	'LineSmoothing' , 'on' ,                 	...
+                                            'MarkerSize' , 3 ,                          ...
+                                            'LineWidth' , 2 )                           ;
+                      set( h.red_filt ,     'MarkerEdgeColor' , 1/255 * [ 255 54 64 ]   ...
+                                      ,     'MarkerFaceColor' , 1/395 * [ 139 35 35 ] )
+
+
+
+        hold on 
+        h.parab     = plot( 0 , 0 , 'y' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
+%         h.corner    = plot( angles_deg , pipe_diameter / 2 * ones( 1 , 1081 ) , 'g' ,   ...
+%                                           'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
+        set( gca , 'Color' , [0.0500    0.0750    0.0750] )
+
+        h.fit_axes  = ancestor( h.red_filt , 'Axes' )                                   ;
+        h.min_mark  = scatter( 0 , 0 , 'o', 'MarkerEdgeColor' , 'b' ,                   ...
+                                            'MarkerFaceColor' , [ 0 0.5 0.5 ] ,         ...
+                                            'LineWidth' , 3 )                           ;
+
+        h.bounds    = plot( [ 0         0       nan     180     180 ] ,                 ...
+                            [ -100  	100 	nan     -100  	100        ] )          ;
+        set( h.fit , 'XDir' , 'reverse' )                                
+      	set( h.fit , 'YLim' , [ 0 pipe_diameter ] )
+        % axis equal
+        grid on
+        xlabel( '\theta, Degrees, -45 : 225' )
+        ylabel( '\rho, Inches' )
+        set( gcf, 'Units' , 'Normalized' )
+        xlim( [ -45 225 ] )
+        disp( 'Quantiles Calculated.' )
+        % ylim( quants + [ -0.5 0.5 ] )
+        ylim( [ 8 ( pipe_diameter - ( float_width/2 ) ) ] )
+        % all_args        = { all_x , all_y , z_grid , 'EdgeColor' , 'none' }         ;
+        set( h.fit_axes , 'XTick' , -60 : 30 : 255 )
+        set( h.singlefig , 'OuterPosition' , [ 1.014    0.1037    0.8708    1.0000 ] )
+        if add_legends
+        legend( { 'Included Points' , 'Excluded Points' , 'Parabolic Fit Curve' , 'Parabola Vertex' } )
+        end
+
+        drawnow
+        last_time       = tic                                                       ;
+        ifp             = urg_struct(1).header.scanMsec * 1e-3                      ;
+        num_scans       = numel( urg_struct )                                       ;
+        fixed_scan      = 79770  
+        generate_polynomial_title
+        
+h.corrosion         = subplot( 2 , 4 , 8 )                                          ;
+    h.corr              = plot( 1 , 1 , 'Color' , 'r' , 'LineSmoothing' , 'on' , 'MarkerFaceColor' , [ 1 .8 .8 ] , 'MarkerEdgeColor' , 'none' , 'LineStyle' , '-' , 'Marker' , 'o' , 'LineWidth' , 3 )     ;
+    ylim( [ 0 8 ] )
+    grid on        
+    title( 'Corrosion Area, in^2' )
+
+    inner_ring_x            = pipe_in * x_weight                                        ;
+    inner_ring_y            = pipe_in * y_weight                                        ;           
+axes( h.scan )
+    hold on
+
+desired_scans   = 1 : size( all_scans , 1 )                                     	;
+parab_order     = 2                                                                     ;
+fit_to_all      = false                                                                 ;
+minmax          = @( x ) [ min( x( : ) ) max( x( : ) ) ]                                ;
+time_format     = 'yyyy-mm-dd, HH:MM:SS.FFF'
+toggle( h.circle ) 
+for i_scan = desired_scans
+        urg_struct( i_scan ).timeStamp
+        raw_scan 	= all_scans( i_scan , : )                               	;
+        try
+        pipe_fit                                                                ;
+        title( sprintf( '%s\nScan %d of %d, %0.2f ft \nAverage Diameter: %0.2fin',   ...
+               datestr( urg_struct( i_scan ).timeStamp , time_format ) ,            ...
+               i_scan ,                                                             ...
+               num_scans ,                                                          ...
+               urg_ft( i_scan ) ,                                                   ...
+               2*par( i_scan , 3 ) ) )                                            	;
+        
+        diam_rec( parab_order , i_scan )    = par( i_scan , 3 )                 ;
+        
+        if disp_plots
+            drawnow
+            update_plots
+%             find_corners
+        end
+        
+        catch big_loop_error
+            disp( 'Kicked out.' )
+            disp( big_loop_error )
+%             pause
+        end
+end
+save( 'distance_and_corrosion.mat' , 'urg_ft' , 'corrosion' )
+% profile viewer
+##### SOURCE END #####
+--></body></html>
