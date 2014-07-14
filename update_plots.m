@@ -5,11 +5,19 @@ else
     set( fit_center , 'XData' , -par( i_scan , 1 ) , 'YData' , -par( i_scan , 2 ) )     ;
 end
 
-set( h.corr ,             'XData' , corr_range ,                                            ...
-                          'YData' , corrosion( corr_range ) )                            	;
-                      
-set( h.corrosion , 'XLim' , corr_bounds ,                                                   ...
-                   'XTickLabel' , num2str( fliplr( urg_ft( get( h.corrosion , 'XTick' ) ) ) , '%3.2f') )  
+set( h.corr ,             'XData' , urg_ft( 1 : max( corr_range ) ) ,                              ...
+                          'YData' , corrosion( 1 : max( corr_range ) ) )                 	;
+get( h.corrosion , 'XTick' )                      
+% set( h.corrosion , 'XLim' , corr_bounds ,                                                   ...
+%                    'XTick' , corr_range ,                                                   ...
+%                    'XTickLabel' , num2str( fliplr( urg_ft( corr_range ) ) , '%3.2f') )  
+axes( h.corrosion )
+% curr_xl             = [ urg_ft( min( corr_range ) ) urg_ft( max( corr_range ) ) ]           ;
+curr_xl             = mean( minmax( urg_ft( corr_range ) ) ) + [ -0.4 0.2 ] 
+if isempty( curr_xl ) || ~any( curr_xl )
+    curr_xl = [ 0 1 ]       
+end
+xlim( curr_xl )
 % set( h.range , 'XData' , patch_x , 'YData' , patch_y , 'ZData' , patch_z )
 set( get( h.fit,    'Title' ) , 'String' , fit_title{ i_scan } )                            ;   %   Parabola Subplot Title
 %   set( h.med ,    'XData' , med_x , 'YData' , med_y )                                     ;   %   Cyan Fat Partial Circle

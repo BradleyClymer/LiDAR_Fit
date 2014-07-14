@@ -54,6 +54,7 @@ corrosion( i_scan )     = nansum( .5 * d_t(          pos_patch ) .*             
 corr_bounds           	= [ max( i_scan-30 , 1 ) , min( i_scan+30 , numel( corrosion ) ) ]       	;
 corr_range              = corr_bounds( 1 ) : round( corr_bounds( 2 ) - 5 )                          ;
 % cmap                    = flipud( jet( numel( diffs ) ) )                                           ;
+% current_ticks           = get( h.corrosion , 'XTicks'
 
 try
     delete( findobj( gca , 'type' , 'patch' ) )

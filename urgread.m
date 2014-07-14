@@ -2,12 +2,12 @@ clc
 close all hidden
 colordef black
 % clear ipd_struct
-% clear
+clear
 profile off
 % urg_file        = 'test.ubh'
 old_folder      = pwd 
 data_folder     = 'C:\Users\bclymer\Downloads'
-data_folder     = 'P:\Dropbox (Future Scan)\Flyswatter (1)\DATA Flyswatter Project\RJN_CINCINNATI_PILOT_STUDY\36401003_36401001\'
+data_folder     = 'P:\Dropbox (Future Scan)\Flyswatter (1)\Testing'
 % data_folder     = old_folder
 
 if ~exist( 'urg_file' , 'var' )
@@ -41,7 +41,8 @@ if fu
         disp( 'Raw IPD file has been read' )
     end
 else
-    ipd_struct	= struct( 'ft' , 0 , 'clock' , 0 , 'num_scans' , 1 )        ;
+    spoofed.ft  = ( 0 : ( numel( urg_struct ) -1 ) ) / 80                   ;
+    ipd_struct	= struct( 'ft' ,  spoofed.ft  , 'clock' , [ urg_struct.timeStamp ] , 'num_scans' , size( urg_struct , 1 ) )	;
     disp( 'IPD struct spoofed.' )
     cd( old_folder )
 end
@@ -59,7 +60,7 @@ end
 
 urg_ft              = ipd_struct.ft( ipd_index )                            ;
 figure
-h.urg_distance      = plot( urg_ts - min( urg_ts ) , urg_ft  )              ;
+h.urg_distance      = plot( urg_ts - min( urg_ts ) , urg_ft )               ;
 title( urg_struct( 1 ).dateString )
 xt                  = get( get( h.urg_distance , 'Parent' ) , 'XTick' )     ;
 xtl                 = datestr( xt , 'MM:SS' )                               ;
@@ -70,6 +71,9 @@ axis tight
 grid on
 
 % return
+force_filter_gen    = false                                                 ;
+
+if ~exist( 'df.mat' , 'file' ) || force_filter_gen
 disp( 'Generating Spacial Filter' )
 df               = designfilt(   'lowpassfir' ,                             ...
                                  'DesignMethod' ,           'equiripple' ,	...
@@ -79,13 +83,16 @@ df               = designfilt(   'lowpassfir' ,                             ...
                                  'StopbandAttenuation' ,     60 ,           ...
                                  'SampleRate' ,              9 )         	;
 
-
+df
+else
+    load( 'df.mat' ) 
+end
 plot_parabola   = true                                                      ;
 run_calculations= true                                                      ;
 disp_plots      = true                                                      ;
 fit_order    	= 6                                                         ;  
 add_legends     = false                                                     ;
-find_edges      = true                                                      ;
+find_edges      = false                                                     ;
 
 mm_conversion   = 1 / 25.4                                                  ;   % 1mm in inches
 
@@ -97,8 +104,8 @@ y_weight        = sind( angles_deg )                                        ;
 angles_rad      = angles_deg  * pi / 180                                    ;   % -45 : 225 in radians
 angle_offset    = +30                                                       ;
 
-pipe_diameter   = 54                                                        ;
-float_width     = 13
+pipe_diameter   = 24.9                                                      ;
+float_width     = 13                                                        ;
 pipe_in         = pipe_diameter / 2                                         ;   % pipe radius in inches
 pipe_in_sq      = pipe_in ^ 2                                               ;
 accepted_diff   = .025 * pipe_diameter                                      ;   % inches
@@ -223,7 +230,8 @@ h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
 
         set( gcf, 'Units' , 'Normalized' , 'Numbertitle' , 'Off' , 'Name' , [ 'Fit of Lidar to Pipe ' urg_file ] )
         xlim( 1.2 * pipe_in * [ -1 1 ] + [ -2 2 ] )
-        ylim( pipe_in * [ -1 1 ] + 4 )
+        ylim_offset                                     = 1
+        ylim( pipe_in * [ -1 1 ] + ylim_offset )
         if add_legends
 
         legend( { 'Raw Noisy Data' ,            ...
@@ -299,7 +307,7 @@ h.corrosion         = subplot( 2 , 4 , 8 )                                      
 axes( h.scan )
     hold on
 
-desired_scans   = 13000 : size( all_scans , 1 )                                     	;
+desired_scans   = 1 : size( all_scans , 1 )                                     	;
 parab_order     = 2                                                                     ;
 fit_to_all      = false                                                                 ;
 minmax          = @( x ) [ min( x( : ) ) max( x( : ) ) ]                                ;
@@ -322,13 +330,14 @@ for i_scan = desired_scans
         if disp_plots
             drawnow
             update_plots
-            find_corners
+%             find_corners
         end
         
         catch big_loop_error
             disp( 'Kicked out.' )
             disp( big_loop_error )
+%             pause
         end
 end
 save( 'distance_and_corrosion.mat' , 'urg_ft' , 'corrosion' )
-profile viewer
+% profile viewer

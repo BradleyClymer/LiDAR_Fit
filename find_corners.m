@@ -3,8 +3,9 @@ current_med     = all_med( i_scan , : )                                 ;
 cm              = current_med                                           ;
 cm( isnan( cm ) ) = 0                                                   ;
 lp              = [ 0 diff( sign( [ 0 diff( filtfilt( df , cm ) ) ] ) ) ];
-top_peaks       = find( lp == -2 )                                        
 
+top_peaks       = find( lp == -2 )                                        
+top_peaks       = find( lp == 2 ) 
 evaluation      = false                                                 ;
 if evaluation
     figure
