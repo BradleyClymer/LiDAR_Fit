@@ -8,7 +8,9 @@ radius          = 1                                                 ;
 circle.x        = radius * cosd( angles )                           ;
 circle.y        = radius * sind( angles )                           ;
 q               = sqrt( 2 )
-points          = [ 1 , 1 ; -1 , 1 ; -1 , -1 ; 1 , -1 ] * radius / 2   ;
+points          = [ 1 , 1 ; -1 , 1 ; -1 , -1 ; 1 , -1 ] * radius / 2;
+dx              = radius / 15                                        ;
+dy              = dx                                                ;
 for i = 1 : size( points , 1 ) 
     x               = points( i , 1 )                       ;
     y               = points( i , 2 )                       ;
@@ -26,29 +28,36 @@ hold on
 scatter( points( : , 1 ) , points( : , 2 ) ) 
 hold on
 title( [ 'Circle of Radius ' num2str( radius ) ] )
-
+text( points( : , 1 ) + dx , points( : , 2 ) + dy , num2str( ( 1:4 )' ) )
+line_names = { [] } 
+set( gcf , 'Units' , 'Normalized' , 'OuterPosition' , [ 1.05 0.15 0.89 0.9 ] )
 for s = 1 : 4
     subplot( 420 + 2*s )
-    for i_fit  = 1 : 2
+    for i_fit  = [ 2 6 7 ]
         p       = polyfit( angles , dist( s , : ) , i_fit )         ;
         fit_ord{ 2 * i_fit - 1 }    = angles                        ;
         fit_ord{ 2 * i_fit     }    = polyval( p , angles )         ;
-        names{ i_fit + 1 }          = sprintf( 'Order %d' , i_fit ) ;
+        line_names{ end + 1 }     	= sprintf( 'Order %d' , i_fit ) ;
     end
-    names{ 1 }  = 'Actual Data' 
+    line_names{ 1 }  = 'Actual Data' 
     h( s , : )  = plot( angles , dist( s , : ) , fit_ord{ : } , 'LineSmoothing' , 'on' )
     get( h( s ) )
-    set( h( s , 2:( i_fit-1 ) ) , 'Visible' , 'off' ) 
-    legend( { names{ : } } )
+%     set( h( s , 2:( i_fit-1 ) ) , 'Visible' , 'off' ) 
+%     axis tight
+    xlim( [ 0 360 ] )
+    legend( { line_names{ : } } , 'Location' , 'NorthEastOutside' )
     grid on
-    axis tight
+    
     title( [ 'Quadrant ' num2str( s ) ] )
     set( gca, 'XDir' , 'reverse' )
     set( gca, 'XTick' , ticks , 'XTickLabel' , ( num2str( ticks' ) ) )
+    curr_pos = get( gca , 'Position' )
+    set( gca , 'Position' , get( gca , 'OuterPosition' ) .* [ 1 1 1 0.8 ] )
 end
-polyfit( angles * pi / 180 , dist( end , : ) , 20 )
-polyfit( x_diff , y_diff , 20 )
-
-set( gcf , 'Units' , 'Normalized' , 'OuterPosition' , [ 1.05 0.05 0.49 0.9 ] )
+polyfit( angles * pi / 180 , dist( end , : ) , 6 )
+polyfit( x_diff , y_diff , 6 )
+tightfig
+set( gcf , 'Units' , 'Normalized' , 'OuterPosition' , [ 1.05 0.15 0.89 0.9 ] )
 figure
-polar( angles * pi / 180 , dist( 4 , : ) )
+h.polar = polar( angles * pi / 180 , dist( 4 , : ) )
+get( h.polar )

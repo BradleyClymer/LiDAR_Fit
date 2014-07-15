@@ -2,12 +2,14 @@ clc
 close all hidden
 colordef black
 % clear ipd_struct
-clear
+% clear
 profile off
 % urg_file        = 'test.ubh'
 old_folder      = pwd 
-data_folder     = 'C:\Users\bclymer\Downloads'
-data_folder     = 'P:\Dropbox (Future Scan)\Flyswatter (1)\Testing'
+data_folder     = old_folder
+% data_folder     = 'C:\Users\bclymer\Downloads'
+% data_folder     = 'P:\Dropbox (Future Scan)\Flyswatter (1)\Testing'
+data_folder     = 'P:\Dropbox (Future Scan)\Flyswatter (1)\DATA Flyswatter Project\rjn-tULSA (rjn-159)\101N-11_101N-12'
 % data_folder     = old_folder
 
 %%  Input Parsing Block. 
@@ -115,6 +117,7 @@ end
 %   Here we set overall parameters for the processing. 
 
 plot_parabola   = true                                                      ;
+add_parab_fig   = false                                                     ;
 run_calculations= true                                                      ;
 disp_plots      = true                                                      ;
 fit_order    	= 6                                                         ;  
@@ -129,9 +132,9 @@ x_weight        = cosd( angles_deg )                                        ;   
 y_weight        = sind( angles_deg )                                        ;
 
 angles_rad      = angles_deg  * pi / 180                                    ;   % -45 : 225 in radians
-angle_offset    = +30                                                       ;
+angle_offset    = +10                                                       ;
 
-pipe_diameter   = 24.9                                                      ;
+pipe_diameter   = 54                                                        ;
 float_width     = 13                                                        ;
 pipe_in         = pipe_diameter / 2                                         ;   % pipe radius in inches
 pipe_in_sq      = pipe_in ^ 2                                               ;
@@ -239,122 +242,18 @@ if ~exist( 'all_x_med' , 'var' )
     if ~exist( 'quants' , 'var' )
         quants   	= quantile( all_scans( : ) , [ quant_tol 1-quant_tol ] )
     end
+    clear data
     disp( 'Pre-Processing of LiDAR Data Complete' )    
 end
 
-z_grid      = meshgrid( 1:size( all_x_med , 1 ) , 1:size( all_x_med , 2 ) )' 	;
+%%  Visuals
+%   Here we generate all of the initial figures which will be updated on
+%   each cycle of the display. The long MATLAB figure and object generation
+%   format has been moved to generate_initial_figures for conciseness. 
 
-h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
-    h.scan      = subplot( 1 , 4 , 1:3 )
-        hold on  
-        med_scan    = nanmedian( all_scans )                                            ;
-        set( gca , 'Color' , [0.0500    0.0750    0.0750] )                        
-        hold on 
-        h.fit_p     = plot( 0 , 0 , 'w' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )	;
-        h.circle    = plot( 0 , 0 , 'y' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 ,    ...
-                                          'Marker' , '.' , 'LineStyle' , 'none' )       ;
-                                      
-        circle_template.x     = pipe_in * x_weight                                      ;
-        circle_template.y     = pipe_in * y_weight                                      ;
-        h.template  = plot( circle_template.x ,                                         ...
-                            circle_template.y ,                                         ...
-                            'Color' , 0.6 * [ 1 1 1 ] ,                                 ...
-                            'LineStyle' , '.' ,                                         ...
-                            'LineSmoothing' , 'on' ,                                    ...
-                            'LineWidth' , 2 ,                                           ...
-                            'Marker' , 'none' ,                                        	...
-                            'LineStyle' , '-' )                                         ;
-        plot( 100 * [ -1 1 ] , [ 0 0 ] , 'Color' , [ 0 0 1 ] , 'LineSmoothing' , 'on' )
-        plot( [ 0 0 ] , 100 * [ -1 1 ] , 'Color' , [ 0 0 1 ] , 'LineSmoothing' , 'on' )
-        axis equal
-        grid on
-        xlabel( 'Inches' )
-        ylabel( 'Inches' )
-        file_title  = urg_file                  ;
-        % file_title( file_title == '_' ) = '-'   ;
-        strrep( file_title , '\' , '\\' )
-        title( file_title  )
+generate_initial_figures                                                                ;
 
-        set( gcf, 'Units' , 'Normalized' , 'Numbertitle' , 'Off' , 'Name' , [ 'Fit of Lidar to Pipe ' urg_file ] )
-        xlim( 1.2 * pipe_in * [ -1 1 ] + [ -2 2 ] )
-        ylim_offset                                     = 1
-        ylim( pipe_in * [ -1 1 ] + ylim_offset )
-        if add_legends
-
-        legend( { 'Raw Noisy Data' ,            ...
-                  'Median Filtered' ,           ...
-                  'Shifted',                    ...
-                  'Pipe Fit' ,                  ...
-                  'Pipe Template' } ,           ...
-                  'Location' ,                  ...
-                  'Best' )          ;
-        end
-        
-    h.fit       = subplot( 2 , 4 , 4 )                                                  ;
-        h.bad_filt  = plot( 0 , 0 , 'bx' ,	'LineSmoothing' , 'on' ,                 	...
-                                            'MarkerSize' , 3 ,                          ...
-                                            'LineWidth' , 2 )                           ;     
-                      set( h.bad_filt ,     'MarkerEdgeColor' , 1/255 * [ 119 136 193 ] ...
-                                      ,     'MarkerFaceColor' , 1/255 * [ 198 226 255 ] )
-        hold on                              
-        h.red_filt 	= plot( 0 , 0 , 'r+' , 	'LineSmoothing' , 'on' ,                 	...
-                                            'MarkerSize' , 3 ,                          ...
-                                            'LineWidth' , 2 )                           ;
-                      set( h.red_filt ,     'MarkerEdgeColor' , 1/255 * [ 255 54 64 ]   ...
-                                      ,     'MarkerFaceColor' , 1/395 * [ 139 35 35 ] )
-
-
-
-        hold on 
-        h.parab     = plot( 0 , 0 , 'y' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
-%         h.corner    = plot( angles_deg , pipe_diameter / 2 * ones( 1 , 1081 ) , 'g' ,   ...
-%                                           'LineSmoothing' , 'on' , 'LineWidth' , 2 )    ;
-        set( gca , 'Color' , [0.0500    0.0750    0.0750] )
-
-        h.fit_axes  = ancestor( h.red_filt , 'Axes' )                                   ;
-        h.min_mark  = scatter( 0 , 0 , 'o', 'MarkerEdgeColor' , 'b' ,                   ...
-                                            'MarkerFaceColor' , [ 0 0.5 0.5 ] ,         ...
-                                            'LineWidth' , 3 )                           ;
-
-        h.bounds    = plot( [ 0         0       nan     180     180 ] ,                 ...
-                            [ -100  	100 	nan     -100  	100        ] )          ;
-        set( h.fit , 'XDir' , 'reverse' )                                
-      	set( h.fit , 'YLim' , [ 0 pipe_diameter ] )
-        % axis equal
-        grid on
-        xlabel( '\theta, Degrees, -45 : 225' )
-        ylabel( '\rho, Inches' )
-        set( gcf, 'Units' , 'Normalized' )
-        xlim( [ -45 225 ] )
-        disp( 'Quantiles Calculated.' )
-        % ylim( quants + [ -0.5 0.5 ] )
-        ylim( [ 8 ( pipe_diameter - ( float_width/2 ) ) ] )
-        % all_args        = { all_x , all_y , z_grid , 'EdgeColor' , 'none' }         ;
-        set( h.fit_axes , 'XTick' , -60 : 30 : 255 )
-        set( h.singlefig , 'OuterPosition' , [ 1.014    0.1037    0.8708    1.0000 ] )
-        if add_legends
-        legend( { 'Included Points' , 'Excluded Points' , 'Parabolic Fit Curve' , 'Parabola Vertex' } )
-        end
-
-        drawnow
-        last_time       = tic                                                       ;
-        ifp             = urg_struct(1).header.scanMsec * 1e-3                      ;
-        num_scans       = numel( urg_struct )                                       ;
-        fixed_scan      = 79770  
-        generate_polynomial_title
-        
-h.corrosion         = subplot( 2 , 4 , 8 )                                          ;
-    h.corr              = plot( 1 , 1 , 'Color' , 'r' , 'LineSmoothing' , 'on' , 'MarkerFaceColor' , [ 1 .8 .8 ] , 'MarkerEdgeColor' , 'none' , 'LineStyle' , '-' , 'Marker' , 'o' , 'LineWidth' , 3 )     ;
-    ylim( [ 0 8 ] )
-    grid on        
-    title( 'Corrosion Area, in^2' )
-
-    inner_ring_x            = pipe_in * x_weight                                        ;
-    inner_ring_y            = pipe_in * y_weight                                        ;           
-axes( h.scan )
-    hold on
-
-desired_scans   = 1 : size( all_scans , 1 )                                     	;
+desired_scans   = 10000 : size( all_scans , 1 )                                     	;
 parab_order     = 2                                                                     ;
 fit_to_all      = false                                                                 ;
 minmax          = @( x ) [ min( x( : ) ) max( x( : ) ) ]                                ;
@@ -362,26 +261,30 @@ time_format     = 'yyyy-mm-dd, HH:MM:SS.FFF'
 toggle( h.circle ) 
 for i_scan = desired_scans
         urg_struct( i_scan ).timeStamp
-        raw_scan 	= all_scans( i_scan , : )                               	;
+        raw_scan 	= all_scans( i_scan , : )                                           ;
         try
-        pipe_fit                                                                ;
-        title( sprintf( '%s\nScan %d of %d, %0.2f ft \nAverage Diameter: %0.2fin',   ...
-               datestr( urg_struct( i_scan ).timeStamp , time_format ) ,            ...
-               i_scan ,                                                             ...
-               num_scans ,                                                          ...
-               urg_ft( i_scan ) ,                                                   ...
-               2*par( i_scan , 3 ) ) )                                            	;
+        pipe_fit                                                                        ;
+        title( sprintf( '%s\nScan %d of %d, %0.2f ft \nAverage Diameter: %0.2fin',      ...
+               datestr( urg_struct( i_scan ).timeStamp , time_format ) ,                ...
+               i_scan ,                                                                 ...
+               num_scans ,                                                              ...
+               urg_ft( i_scan ) ,                                                       ...
+               2*par( i_scan , 3 ) ) )                                                  ;
         
-        diam_rec( parab_order , i_scan )    = par( i_scan , 3 )                 ;
+        diam_rec( parab_order , i_scan )    = par( i_scan , 3 )                         ;
         
         if disp_plots
             drawnow
             update_plots
-%             find_corners
+            if add_parab_fig
+                separate_parabola_update
+            end
+            find_corners
         end
         
         catch big_loop_error
             disp( 'Kicked out.' )
+            return
             disp( big_loop_error )
 %             pause
         end

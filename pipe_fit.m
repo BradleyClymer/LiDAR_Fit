@@ -1,17 +1,39 @@
+%   This script has two major parts: point selection for curve fitting, and
+%   pipe-centering to the resulting points which are deemed reasonable.
+
+if run_calculations    
+%%  Figure out fit boundaries
+%   Initially, we set the angle range to a flat 180 degrees,
+%   plus some positive or negative offset, and we remove any values 
+%   that are outliers; values outside of a reasonable radial tolerance 
+%   are tagged as outliers in pre-processing by replacing them with NaN. 
 clc
-if run_calculations
 bounds( i_scan , : ).min 	= 0 - angle_offset                                                      ;
 bounds( i_scan , : ).max	= 180 + angle_offset                                                    ;
 fit_range( i_scan , : ) 	= ~isnan( all_med( i_scan , : ) ) &                                     ...
                                       angles_deg > bounds( i_scan , : ).min &                       ...
                                       angles_deg < bounds( i_scan , : ).max                         ;   % total angle range to fit
 
-% clear p vertex           
-p( i_scan , : )                   = polyfit( angles_rad( fit_range( i_scan , : ) ) ,                ...
-                                             all_med( i_scan , fit_range( i_scan , : ) ) ,          ...
-                                             fit_order )                                            ;
-vertex( i_scan , : )              = calc_vertex( p( i_scan , : ) )                                  ;                       
-quad_fit                                                                                                % parabolic fit
+% clear p vertex  
+%%  Hokuyo polar vector curve Fitting
+%   Two steps in this process: 
+%   1) perform a polynomial fit to all points within the initial range
+%      to get a general idea of where the tightening should take place, and
+%   2) calculate the 'vertex' of the polynomial; the angle of this is a good
+%      indication of the quadrant of the float in the pipe
+p( i_scan , : )     	= polyfit( angles_rad( fit_range( i_scan , : ) ) ,                          ...
+                                               all_med( i_scan , fit_range( i_scan , : ) ) ,     	...
+                                               fit_order )                                       	;
+                                           
+vertex( i_scan , : )	= calc_vertex( p( i_scan , : ) )                                            ;
+
+%%  The meat-and-potatoes fit
+%   In quad_fit - so named because it was originally performed as a
+%   parabola, prior to discovering that this fit was insufficient if the
+%   minimum and maximum radii of the float were within the LiDAR's view;
+%   This is because of the "soft crest" of the maximum radius competing with
+%   the "hard trough" of the minimum radius
+quad_fit                                                                                                % polynomial fit
 min_fit                 = vertex( i_scan, 2 )                                                       ;   
 fit_new_deg             = vertex( i_scan, 1 ) - 90                                                  ;   % mean( all_angles( fit_curve == min_fit ) ) + 0*pi/2           ;       
 par_rec                 = circshift( par_rec , [ -1 0 ] )                                           ;
