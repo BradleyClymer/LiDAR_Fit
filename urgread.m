@@ -9,7 +9,7 @@ old_folder      = pwd
 data_folder     = old_folder
 % data_folder     = 'C:\Users\bclymer\Downloads'
 % data_folder     = 'P:\Dropbox (Future Scan)\Flyswatter (1)\Testing'
-data_folder     = 'P:\Dropbox (Future Scan)\Flyswatter (1)\DATA Flyswatter Project\rjn-tULSA (rjn-159)\101N-11_101N-12'
+data_folder       = 'P:\Dropbox (Future Scan)\Flyswatter (1)\DATA Flyswatter Project\Pima County, AZ - Pro Pipe\1716-07_6804-18'
 % data_folder     = old_folder
 
 %%  Input Parsing Block. 
@@ -83,7 +83,7 @@ end
 
 urg_ft              = ipd_struct.ft( ipd_index )                            ;
 figure
-h.urg_distance      = plot( urg_ts - min( urg_ts ) , urg_ft ,               ...
+h.urg_distance      = plot( urg_ts - min( urg_ts ) , urg_ft( 1 : numel( urg_ts ) ) ,               ...
                             'LineSmoothing' , 'on' ,                        ...
                             'LineWidth' , 3 )                               ;
 title( urg_struct( 1 ).dateString )
@@ -116,7 +116,7 @@ t_start         = tic                                                       ;
 %%  Constants and settings
 %   Here we set overall parameters for the processing. 
 
-plot_parabola   = true                                                      ;
+plot_parabola   = false                                                     ;
 add_parab_fig   = false                                                     ;
 run_calculations= true                                                      ;
 disp_plots      = false                                                     ;
@@ -134,7 +134,7 @@ y_weight        = sind( angles_deg )                                        ;
 angles_rad      = angles_deg  * pi / 180                                    ;   % -45 : 225 in radians
 angle_offset    = +10                                                       ;
 
-pipe_diameter   = 58                                                        ;
+pipe_diameter   = 54                                                        ;
 float_width     = 13                                                        ;
 pipe_in         = pipe_diameter / 2                                         ;   % pipe radius in inches
 pipe_in_sq      = pipe_in ^ 2                                               ;
@@ -241,6 +241,9 @@ if ~exist( 'all_x_med' , 'var' )
     y_scan          = zeros( size( all_y_med )  )                               ;
     out_c           = zeros( size( all_x_med )  )                               ;
     out_t           = zeros( size( all_x_med )  )                               ;
+    fit_range       = true(  size( all_x_med )  )                               ;
+    diff_c          = zeros( size( all_x_med )  )                               ;
+
     
     disp( 'Calculating Quantiles for Y-Limits' )
     quant_tol       = 0.2  
@@ -258,7 +261,7 @@ clear fars fit_range infs all_x_raw all_y_raw
 
 generate_initial_figures                                                                ;
 
-desired_scans   = 1 : size( all_scans , 1 )                                             ;
+desired_scans   = 800 : size( all_scans , 1 )                                           ;
 parab_order     = 2                                                                     ;
 fit_to_all      = false                                                                 ;
 minmax          = @( x ) [ min( x( : ) ) max( x( : ) ) ]                                ;
