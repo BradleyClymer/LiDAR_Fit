@@ -1,7 +1,6 @@
 h.singlefig = figure( 'NumberTitle' , 'off' , 'Name' , 'Fit of Lidar to Pipe' )
     h.scan      = subplot( 1 , 4 , 1:3 )
         hold on  
-        med_scan    = nanmedian( all_scans )                                            ;
         set( gca , 'Color' , [0.0500    0.0750    0.0750] )                        
         hold on 
         h.fit_p     = plot( 0 , 0 , 'w' , 'LineSmoothing' , 'on' , 'LineWidth' , 2 )	;

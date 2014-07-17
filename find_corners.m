@@ -20,7 +20,7 @@ double_median   = [ diff( medfilt2( [ stdfilt( diff( diff( lp ) ) ,     ...
 lp_dm           = ( lp < 0 ) & ( double_median < 0 )                    ;
 lpdm_locs     	= find( lp_dm )                                         ;
 top_peaks     	= lpdm_locs( [ 2 , end-1 ] )                            ;
-evaluation      = true                                                  ;
+evaluation      = false                                                 ;
 
 if evaluation
     close all

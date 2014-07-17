@@ -3,7 +3,7 @@ close all hidden
 colordef black
 % clear ipd_struct
 % clear
-profile off
+profile on
 % urg_file        = 'test.ubh'
 old_folder      = pwd 
 data_folder     = old_folder
@@ -112,14 +112,14 @@ df               = designfilt(   'lowpassfir' ,                             ...
 else
     load( 'df.mat' ) 
 end
-
+t_start         = tic                                                       ;
 %%  Constants and settings
 %   Here we set overall parameters for the processing. 
 
 plot_parabola   = true                                                      ;
 add_parab_fig   = false                                                     ;
 run_calculations= true                                                      ;
-disp_plots      = true                                                      ;
+disp_plots      = false                                                     ;
 fit_order    	= 6                                                         ;  
 add_legends     = false                                                     ;
 find_edges      = false                                                     ;
@@ -134,7 +134,7 @@ y_weight        = sind( angles_deg )                                        ;
 angles_rad      = angles_deg  * pi / 180                                    ;   % -45 : 225 in radians
 angle_offset    = +10                                                       ;
 
-pipe_diameter   = 54                                                        ;
+pipe_diameter   = 58                                                        ;
 float_width     = 13                                                        ;
 pipe_in         = pipe_diameter / 2                                         ;   % pipe radius in inches
 pipe_in_sq      = pipe_in ^ 2                                               ;
@@ -236,6 +236,11 @@ if ~exist( 'all_x_med' , 'var' )
     R_guess         = pipe_in                                                   ;
     par_rec         = repmat( [ x_guess y_guess R_guess ] ,                     ...
                       size( filter_mat , 1 ) , 1 )                              ;   % initialize record of circle parameters
+    med_scan        = nanmedian( all_scans )                                	;
+    x_scan          = zeros( size( all_x_med )  )                               ;
+    y_scan          = zeros( size( all_y_med )  )                               ;
+    out_c           = zeros( size( all_x_med )  )                               ;
+    out_t           = zeros( size( all_x_med )  )                               ;
     
     disp( 'Calculating Quantiles for Y-Limits' )
     quant_tol       = 0.2  
@@ -245,7 +250,7 @@ if ~exist( 'all_x_med' , 'var' )
     clear data
     disp( 'Pre-Processing of LiDAR Data Complete' )    
 end
-
+clear fars fit_range infs all_x_raw all_y_raw
 %%  Visuals
 %   Here we generate all of the initial figures which will be updated on
 %   each cycle of the display. The long MATLAB figure and object generation
@@ -253,12 +258,13 @@ end
 
 generate_initial_figures                                                                ;
 
-desired_scans   = 10000 : size( all_scans , 1 )                                     	;
+desired_scans   = 1 : size( all_scans , 1 )                                             ;
 parab_order     = 2                                                                     ;
 fit_to_all      = false                                                                 ;
 minmax          = @( x ) [ min( x( : ) ) max( x( : ) ) ]                                ;
 time_format     = 'yyyy-mm-dd, HH:MM:SS.FFF'
 toggle( h.circle ) 
+h.wait          = waitbar(0,'Processing scans') 
 for i_scan = desired_scans
         urg_struct( i_scan ).timeStamp
         raw_scan 	= all_scans( i_scan , : )                                           ;
@@ -284,10 +290,23 @@ for i_scan = desired_scans
         
         catch big_loop_error
             disp( 'Kicked out.' )
-            return
+            
             disp( big_loop_error )
+            return
 %             pause
         end
+%         clear out_c out_t x_scan y_scan
+        if ~mod( i_scan , 100 )
+        progress_frac       = ( i_scan - min( desired_scans ) ) / numel( desired_scans )    ;
+        time_so_far         = ( toc( t_start ) )                                            ;
+        time_per_scan       = time_so_far / ( i_scan - min( desired_scans ) )               ;
+        time_remain         = ( 1 - progress_frac ) * time_so_far / progress_frac           ;
+        time_string         = sprintf( '%0.2f mins remain, %0.1f msec per scan ' ,       	...
+                                          time_remain / 60 , time_per_scan * 100 )          ;
+        waitbar( progress_frac , h.wait , time_string )
+        end
 end
+close all
+toc( t_start )
 save( 'distance_and_corrosion.mat' , 'urg_ft' , 'corrosion' )
-% profile viewer
+profile viewer
