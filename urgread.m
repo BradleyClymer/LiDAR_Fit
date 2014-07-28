@@ -9,7 +9,7 @@ old_folder      = pwd
 data_folder     = old_folder
 % data_folder     = 'C:\Users\bclymer\Downloads'
 % data_folder     = 'P:\Dropbox (Future Scan)\Flyswatter (1)\Testing'
-data_folder       = 'P:\Dropbox (Future Scan)\Flyswatter (1)\DATA Flyswatter Project\Pima County, AZ - Pro Pipe\1716-07_6804-18'
+data_folder       = 'P:\Dropbox (Future Scan)\Flyswatter (1)\Testing\'
 % data_folder     = old_folder
 
 %%  Input Parsing Block. 
@@ -35,8 +35,8 @@ if ~exist( 'urg_struct' , 'var' )
     disp( 'Reading Raw UrgBenri File' )                                                     
     cd( old_folder )                                                                        ;
     urg_struct      = urg_struct_read( fid )                                                ;
-
 end
+
 % 
 if ~exist( 'ipd_file' , 'var' )
     cd( data_folder )
@@ -299,7 +299,7 @@ for i_scan = desired_scans
 %             pause
         end
 %         clear out_c out_t x_scan y_scan
-        if ~mod( i_scan , 100 )
+        if ~mod( i_scan , 100 ) | ( i_scan == desired_scans( end ) )
         progress_frac       = ( i_scan - min( desired_scans ) ) / numel( desired_scans )    ;
         time_so_far         = ( toc( t_start ) )                                            ;
         time_per_scan       = time_so_far / ( i_scan - min( desired_scans ) )               ;

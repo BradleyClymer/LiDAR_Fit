@@ -37,19 +37,25 @@ tic
     multi_echo          = any( field_cell{ 1 }{ scan_column }( 1 : 10 ) == '|' )                            ;
     fprintf( 'Date information parsed.\n\n' )
     if multi_echo
-        scanfunc        = @( row ) ( textscan( row , '%f|%f' , 1081 , 'Delimiter' , ';' ) )                 ;
+        scanfunc        = @( row ) ( textscan( row , '%f|%f' , 1081 , 'Delimiter' , { ';' , '&' } ) )   	;
         double_cells  	= cellfun( scanfunc , cols( : , scan_column ) , 'UniformOutput' , false )           ;
         double_cat      = vertcat( double_cells{ : } )                                                      ;
         cellscan        = double_cat( : , 1 )                                                               ;
+        second_scan     = double_cat( : , 2 )                                                               ;
     else
         scanfunc    	= @( row ) ( textscan( row , '%f' , 1081 , 'Delimiter' , ';' ) )                    ;
-        cellscan            = cellfun( scanfunc , cols( : , scan_column ) )                               	;
+        cellscan        = cellfun( scanfunc , cols( : , scan_column ) )                                     ;
     end
     disp( 'Converting scan text to vectors.' )
     disp( 'Assembling Scan Structure.' )
-    urg_struct          = struct( 'dateString' ,    date ,                                                  ...
-                                  'scan' ,          cellscan ,                                              ...
+    urg_struct          = struct( 'scan' ,          cellscan ,                                              ...
                                   'timeStamp' ,     d_a )                                                   ;
+    
+	urg_struct( 1 ).dateString  = date                                                                      ;
+    
+    if size( double_cat , 2 ) > 1
+        [ urg_struct.intensity ] = deal( second_scan{ : } )                                                 ;
+    end
     f = figure( 'Units' , 'Normalized' , 'OuterPosition' , [ 0.2 0.04 0.6 0.96 ] )                          ;
     time_demo = datevec( [ d_a{ : } ] )                                                                     ;
     seconds     = 60 * time_demo( : , 5 ) + time_demo( : , 6 )                                              ;
