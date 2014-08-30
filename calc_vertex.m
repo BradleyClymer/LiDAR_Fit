@@ -1,10 +1,6 @@
 function v = calc_vertex( p )
 %   p is the polynomial describing the input data curve. The independent
 %   variable is angle in RADIANS. 
-if nargin == 0
-    v = [ 90 15 ]   ;
-    return
-end
 
 if numel( p ) == 2 
 v  = [ ( ( -p( 2 ) / ( 2 * p( 1 ) ) ) / 1 ) * 180 / pi ,         	...     % find vertex, -b / 2a, in radians, 
