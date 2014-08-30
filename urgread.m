@@ -253,7 +253,7 @@ if ~exist( 'all_x_med' , 'var' )
     clear data
     disp( 'Pre-Processing of LiDAR Data Complete' )    
 end
-clear fars fit_range infs all_x_raw all_y_raw
+clear fars fit_range infs %all_x_raw all_y_raw
 %%  Visuals
 %   Here we generate all of the initial figures which will be updated on
 %   each cycle of the display. The long MATLAB figure and object generation
