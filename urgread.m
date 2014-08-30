@@ -9,7 +9,7 @@ old_folder      = pwd
 data_folder     = old_folder
 % data_folder     = 'C:\Users\bclymer\Downloads'
 % data_folder     = 'P:\Dropbox (Future Scan)\Flyswatter (1)\Testing'
-data_folder       = 'P:\Dropbox (Future Scan)\Flyswatter (1)\DATA Flyswatter Project\Pima County, AZ - Pro Pipe\1716-07_6804-18'
+% data_folder       = 'P:\Dropbox (Future Scan)\Flyswatter (1)\DATA Flyswatter Project\Pima County, AZ - Pro Pipe\1716-07_6804-18'
 % data_folder     = old_folder
 
 %%  Input Parsing Block. 
@@ -134,7 +134,7 @@ y_weight        = sind( angles_deg )                                        ;
 angles_rad      = angles_deg  * pi / 180                                    ;   % -45 : 225 in radians
 angle_offset    = +10                                                       ;
 
-pipe_diameter   = 54                                                        ;
+pipe_diameter   = 25                                                        ;
 float_width     = 13                                                        ;
 pipe_in         = pipe_diameter / 2                                         ;   % pipe radius in inches
 pipe_in_sq      = pipe_in ^ 2                                               ;
@@ -288,7 +288,7 @@ for i_scan = desired_scans
             if add_parab_fig
                 separate_parabola_update
             end
-            find_corners
+%             find_corners
         end
         
         catch big_loop_error

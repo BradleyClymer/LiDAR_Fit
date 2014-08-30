@@ -54,14 +54,18 @@ sign_correction         = 180 * ( x_scan( i_scan , : ) < 0 )                    
 out_c( i_scan , : )     = ( ( x_scan( i_scan , : ) ) .^2 + ( y_scan( i_scan, : ) ) .^2 ) .^0.5      ;
 out_t( i_scan , : )     = atand( ( y_scan( i_scan, : ) ) ./ ( x_scan( i_scan , : ) ) ) +            ...
                           sign_correction                                                           ;
-d_t                     = diff( vertcat( circshift( out_t( i_scan , : ) , +1 , 2 ) ,              	...
-                                         circshift( out_t( i_scan , : ) , -1 , 2 ) ) ) / 360        ;                
+% d_t                     = diff( vertcat( circshift( out_t( i_scan , : ) , +1 , 2 ) ,              	...
+%                                          circshift( out_t( i_scan , : ) , -1 , 2 ) ) ) / 360        ;     
+d_t                     = diff( vertcat( circshift( out_t( i_scan , : ) , [ 0 +1 ] ) ,              	...
+                                         circshift( out_t( i_scan , : ) , [ 0 -1 ] ) ) ) / 360        ;  
 diff_c( i_scan , : )    = out_c( i_scan , : ) - pipe_in                                             ;
 pos_patch               = [ 0 sign( diff_c( i_scan , 2 : ( end ) ) ) ] > 0                          ;
 pos_patch( end )        = 0                                                                         ;
 diff_locs               = diff( [ pos_patch( 1 ) , pos_patch ] )                                    ;
-starts                  = ( pos_patch & ~circshift( pos_patch , 1 , 2 ) )                           ;
-ends                    = ( pos_patch & ~circshift( pos_patch , -1 , 2 ) )                          ;
+% starts                  = ( pos_patch & ~circshift( pos_patch , 1 , 2 ) )                           ;
+% ends                    = ( pos_patch & ~circshift( pos_patch , -1 , 2 ) )                          ;
+starts                  = ( pos_patch & ~circshift( pos_patch , [ 0 +1 ] ) )                           ;
+ends                    = ( pos_patch & ~circshift( pos_patch , [ 0 -1 ] ) )                          ;
 start_inds              = find( starts ) +0                                                         ;
 end_inds                = find( ends ) -0                                                           ;
 
