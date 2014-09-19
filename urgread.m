@@ -1,16 +1,10 @@
 clc
 close all hidden
 colordef black
-% clear ipd_struct
-% clear
-profile on
-% urg_file        = 'test.ubh'
+profile off
 old_folder      = pwd 
 data_folder     = old_folder
-% data_folder     = 'C:\Users\bclymer\Downloads'
-% data_folder     = 'P:\Dropbox (Future Scan)\Flyswatter (1)\Testing'
-% data_folder       = 'P:\Dropbox (Future Scan)\Flyswatter (1)\DATA Flyswatter Project\Pima County, AZ - Pro Pipe\1716-07_6804-18'
-% data_folder     = old_folder
+data_folder     = 'P:\Dropbox (Future Scan)\Flyswatter (1)\DATA Flyswatter Project\tra_rjn_ef3_carrollton\1690E_1680E'
 
 %%  Input Parsing Block. 
 %   Asks for UrgBenri file, passes it to the file pre-processor, 
@@ -126,8 +120,11 @@ find_edges      = false                                                     ;
 
 mm_conversion   = 1 / 25.4                                                  ;   % 1mm in inches
 
-angles_deg  	= linspace( -45 , 225 , numel( urg_struct( 1 ).scan ) )     ;   % angles of LiDAR scan, in as many
-                                                                                % points as one scan has                                                                             
+% angles_deg  	= linspace( -45 , 225 , numel( urg_struct( 20 ).scan ) )    ;   % angles of LiDAR scan, in as many
+                                                                                % points as one scan has  
+
+% Angles_deg now mapped to a fixed 1081 points; this is because the size of a scan is unreliable, and produces unexpected results.                                                                                            
+angles_deg      = linspace( -45 , 225 , 1081 )                              ;
 x_weight        = cosd( angles_deg )                                        ;   % pre-calculate the weights of the angles
 y_weight        = sind( angles_deg )                                        ;
 
@@ -160,10 +157,11 @@ min_rec         = zeros( numel( filter_order ) , 1 )                        ;   
 %   filter block - to smooth the motion of centering, not the FIR filter
 %   above which finds corners in find_corners.m - as well as the curve
 %   which gets fit to the data and the record of vertices 
-struct_size_vec = cell2mat( arrayfun( @( x ) size( x.scan ) , urg_struct ,  ...
-                           'UniformOutput' , false ) )                      ;   % size of scans. ex: 1081x1 
-bad_scans       = struct_size_vec( : , 1 ) ~= 1081                          ;   % find non-conforming scans
-urg_struct( bad_scans ) = []                                                ;   % remove bad scans
+% struct_size_vec = cell2mat( arrayfun( @( x ) size( x.scan ) , urg_struct ,  ...
+%                            'UniformOutput' , false ) )                      ;   % size of scans. ex: 1081x1 
+% bad_scans       = struct_size_vec( : , 1 ) ~= 1081                          ;   % find non-conforming scans
+% urg_struct( bad_scans ) = []                                                ;   % remove bad scans
+urg_struct( 501 : end ) = []                                                ;
 num_scans       = size( urg_struct , 1  )                                   ;
 
 %   initialize stuff

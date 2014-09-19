@@ -35,16 +35,21 @@ tic
         scan_column         = 3                                                                             ;
     end
     multi_echo          = any( field_cell{ 1 }{ scan_column }( 1 : 10 ) == '|' )                            ;
-    fprintf( 'Date information parsed.\n\n' )
+    fprintf( 'Date information parsed.\n\nParsing scan data. (long process, please be patient)\n' )
     if multi_echo
-        scanfunc        = @( row ) ( textscan( row , '%f|%f' , 1081 , 'Delimiter' , ';' ) )                 ;
+        scanfunc        = @( row ) ( textscan( row , '%f|%f' , 1081 , 'Delimiter' , { ';' , '&' }  ) )   	;
         double_cells  	= cellfun( scanfunc , cols( : , scan_column ) , 'UniformOutput' , false )           ;
         double_cat      = vertcat( double_cells{ : } )                                                      ;
         cellscan        = double_cat( : , 1 )                                                               ;
     else
-        scanfunc    	= @( row ) ( textscan( row , '%f' , 1081 , 'Delimiter' , ';' ) )                    ;
-        cellscan            = cellfun( scanfunc , cols( : , scan_column ) )                               	;
+        scanfunc    	= @( row ) ( textscan( row , '%f' , 1081 , 'Delimiter' , { ';' , '&' } ) )      	;
+        cellscan    	= cellfun( scanfunc , cols( : , scan_column ) )                                     ;
     end
+    
+    size_check              = @( x ) size( x , 1 ) ~= 1081                                              	;
+    bad_cells               = cellfun( size_check , cellscan , 'UniformOutput' , true )                  	;
+    cellscan( bad_cells ) 	= []                                                                            ;
+    d_a( bad_cells )        = []                                                                            ;
     disp( 'Converting scan text to vectors.' )
     disp( 'Assembling Scan Structure.' )
     urg_struct          = struct( 'dateString' ,    date ,                                                  ...
@@ -58,8 +63,8 @@ tic
     subplot( 212 )
     plot( diff( seconds ) , 'LineSmoothing' , 'On' ) , grid on 
     close( f )
-	urg_struct( 1 ).header   = header_struct                                                              	;
-    urg_struct( 1 ).date_vec = d_c{ 1 }( 1 : 3 )                                                            ;
+	[ urg_struct( 1 ).header ]  = header_struct                                                         	;
+    urg_struct( 1 ).date_vec    = d_c{ 1 }( 1 : 3 )                                                         ;
     disp( 'Structure assembled.' )
 toc
 end
