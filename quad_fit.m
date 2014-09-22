@@ -7,10 +7,8 @@
 %   but it varies and takes a sharp turn at the angle at which the LiDAR
 %   beam hits the water. A corner-finding algorithm is included for this
 %   purpose, but is optional. See find_corners.m.
-%
-%   
 
-% accepted_diff 
+
 if exist( 'vertex' , 'var' )
     cv                          = vertex( i_scan , 1 )                                      ;
     bounds( i_scan , : ).min  = 0 - ( 90 - cv  ) - angle_offset                             ;                     	
@@ -18,7 +16,6 @@ if exist( 'vertex' , 'var' )
     bounds( i_scan , : ).range= bounds( i_scan , : ).max - bounds( i_scan , : ).min         ; 
     fprintf( 'Bound Range: %i°\n' , bounds( i_scan , : ).range )                            ;
 end
-% [ bounds( i_scan , : ).min bounds( i_scan , : ).max ]
 
 if find_edges
     find_corners                                                                            ;
@@ -26,7 +23,7 @@ if find_edges
     bounds( i_scan , : ).max  = max( top_peaks ) / 4 - 46                                	;
     bounds( i_scan , : ).range= bounds( i_scan , : ).max - bounds( i_scan , : ).min         ; 
 end
-[ bounds( i_scan , : ).min bounds( i_scan , : ).max ]
+
 for i_squeeze = 1 : parab_order
     p( i_scan , : )             = polyfit( angles_rad( fit_range( i_scan , : ) ) ,           	...
                                            all_med( i_scan , fit_range( i_scan , : ) ) ,        ...
@@ -51,8 +48,3 @@ for i_squeeze = 1 : parab_order
         disp( '''ere' )
     end
 end
-                
-% fit_cell{ i_scan }          = { ( ~isnan( all_med( i_scan , : ) ) +.2 ) ;
-%                                 ( ~bad_fit +.4 ) ;
-%                                 ( ( angles_deg > ( bounds( i_scan , : ).min  ) ) +.6 ) ;
-%                                 ( ( angles_deg < ( bounds( i_scan , : ).max  ) ) + 0.8 ) }      ;

@@ -3,8 +3,8 @@ tic
     if nargin == 0, 
         fid = fopen( 'all' ); 
         if isempty( fid ) 
-            fid = evalin( 'caller' , 'fopen( urg_file )' )
-        end                                                               ;
+            fid = evalin( 'caller' , 'fopen( urg_file )' )                  ;
+        end                                                               
     end
     header_struct       = read_urg_header( fid )                                                            ; 
     disp( 'Grabbing raw field data.' )

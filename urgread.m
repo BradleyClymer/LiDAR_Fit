@@ -77,7 +77,8 @@ end
 
 urg_ft              = ipd_struct.ft( ipd_index )                            ;
 figure
-h.urg_distance      = plot( urg_ts - min( urg_ts ) , urg_ft( 1 : numel( urg_ts ) ) ,               ...
+h.urg_distance      = plot( urg_ts - min( urg_ts ) ,                        ...
+                            urg_ft( 1 : numel( urg_ts ) ) ,                 ...
                             'LineSmoothing' , 'on' ,                        ...
                             'LineWidth' , 3 )                               ;
 title( urg_struct( 1 ).dateString )
@@ -113,7 +114,7 @@ t_start         = tic                                                       ;
 plot_parabola   = false                                                     ;
 add_parab_fig   = false                                                     ;
 run_calculations= true                                                      ;
-disp_plots      = false                                                     ;
+disp_plots      = true                                                     ;
 fit_order    	= 6                                                         ;  
 add_legends     = false                                                     ;
 find_edges      = false                                                     ;
@@ -131,7 +132,7 @@ y_weight        = sind( angles_deg )                                        ;
 angles_rad      = angles_deg  * pi / 180                                    ;   % -45 : 225 in radians
 angle_offset    = +10                                                       ;
 
-pipe_diameter   = 25                                                        ;
+pipe_diameter   = 45                                                        ;
 float_width     = 13                                                        ;
 pipe_in         = pipe_diameter / 2                                         ;   % pipe radius in inches
 pipe_in_sq      = pipe_in ^ 2                                               ;
@@ -161,7 +162,7 @@ min_rec         = zeros( numel( filter_order ) , 1 )                        ;   
 %                            'UniformOutput' , false ) )                      ;   % size of scans. ex: 1081x1 
 % bad_scans       = struct_size_vec( : , 1 ) ~= 1081                          ;   % find non-conforming scans
 % urg_struct( bad_scans ) = []                                                ;   % remove bad scans
-urg_struct( 501 : end ) = []                                                ;
+% urg_struct( 501 : end ) = []                                                ;
 num_scans       = size( urg_struct , 1  )                                   ;
 
 %   initialize stuff
@@ -201,14 +202,14 @@ if ~exist( 'all_x_med' , 'var' )
                       mm_conversion                                             ;
 	angle_mat       = repmat( angles_rad , sz( 1 ) , 1 )                        ;
     disp( 'Converting to Polar' )
-    [ x_s , y_s ]   = pol2cart( angle_mat , raw_data )                          ;
+%     [ x_s , y_s ]   = pol2cart( angle_mat , raw_data )                          ;
     disp( 'Estimating pipe fit' )
     circle.x        = pipe_in * x_weight                                        ;
     circle.y        = pipe_in * y_weight                                        ;
-    data.x          = x_s * mm_conversion                                       ;
-    data.y          = y_s * mm_conversion - initial_offset + pipe_in            ;
-    data.r          = sqrt( data.x .^2 + data.y .^2 )                           ;
-    data.noise      = abs( data.r - pipe_in ) > ( .2 * pipe_in )                ; 
+%     data.x          = x_s * mm_conversion                                       ;
+%     data.y          = y_s * mm_conversion - initial_offset + pipe_in            ;
+%     data.r          = sqrt( data.x .^2 + data.y .^2 )                           ;
+%     data.noise      = abs( data.r - pipe_in ) > ( .2 * pipe_in )                ; 
     all_scans       = double( raw_data ) * mm_conversion                        ;
     disp( 'De-noising' )
     
@@ -229,7 +230,8 @@ if ~exist( 'all_x_med' , 'var' )
 %     all_med( data.noise ) = nan                                           	;
     all_x_med       = all_med .* all_x_weight                                   ;
     all_y_med       = all_med .* all_y_weight                                   ;
-    x_guess         = mean( nanmedian( data.x ) )                               ;
+    x_guess         = mean( nanmedian( all_x_raw ) )                            ;
+    
     y_guess         = initial_offset - pipe_in                                  ;
     R_guess         = pipe_in                                                   ;
     par_rec         = repmat( [ x_guess y_guess R_guess ] ,                     ...
@@ -260,23 +262,27 @@ clear fars fit_range infs %all_x_raw all_y_raw
 generate_initial_figures                                                                ;
 
 desired_scans   = 800 : size( all_scans , 1 )                                           ;
+% desired_scans   = 1000 : 1500                                                               ;
 parab_order     = 2                                                                     ;
 fit_to_all      = false                                                                 ;
 minmax          = @( x ) [ min( x( : ) ) max( x( : ) ) ]                                ;
 time_format     = 'yyyy-mm-dd, HH:MM:SS.FFF'
 toggle( h.circle ) 
 h.wait          = waitbar(0,'Processing scans') 
+%%
 for i_scan = desired_scans
         urg_struct( i_scan ).timeStamp
         raw_scan 	= all_scans( i_scan , : )                                           ;
         try
         pipe_fit                                                                        ;
-        title( sprintf( '%s\nScan %d of %d, %0.2f ft \nAverage Diameter: %0.2fin',      ...
+        title( sprintf( [ '%s\nScan %d of %d, %0.2f ft \nAverage Diameter: %0.2fin',    ...
+               '\nMaximum Corrosion: %0.2fin' ] ,                                       ...
                datestr( urg_struct( i_scan ).timeStamp , time_format ) ,                ...
                i_scan ,                                                                 ...
                num_scans ,                                                              ...
                urg_ft( i_scan ) ,                                                       ...
-               2*par( i_scan , 3 ) ) )                                                  ;
+               2*par( i_scan , 3 ) ,                                                    ...
+               max_corrosion( i_scan ) ) )                                              ;
         
         diam_rec( parab_order , i_scan )    = par( i_scan , 3 )                         ;
         
@@ -286,6 +292,7 @@ for i_scan = desired_scans
             if add_parab_fig
                 separate_parabola_update
             end
+            corrosion_history
 %             find_corners
         end
         
@@ -307,6 +314,7 @@ for i_scan = desired_scans
         waitbar( progress_frac , h.wait , time_string )
         end
 end
+%% 
 close all
 toc( t_start )
 save( 'distance_and_corrosion.mat' , 'urg_ft' , 'corrosion' )

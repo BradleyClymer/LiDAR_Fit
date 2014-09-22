@@ -53,19 +53,15 @@ y_scan( i_scan , : )    = all_y_med( i_scan , : ) - par( i_scan , 2 ) + pipe_in 
 sign_correction         = 180 * ( x_scan( i_scan , : ) < 0 )                                        ;
 out_c( i_scan , : )     = ( ( x_scan( i_scan , : ) ) .^2 + ( y_scan( i_scan, : ) ) .^2 ) .^0.5      ;
 out_t( i_scan , : )     = atand( ( y_scan( i_scan, : ) ) ./ ( x_scan( i_scan , : ) ) ) +            ...
-                          sign_correction                                                           ;
-% d_t                     = diff( vertcat( circshift( out_t( i_scan , : ) , +1 , 2 ) ,              	...
-%                                          circshift( out_t( i_scan , : ) , -1 , 2 ) ) ) / 360        ;     
-d_t                     = diff( vertcat( circshift( out_t( i_scan , : ) , [ 0 +1 ] ) ,              	...
-                                         circshift( out_t( i_scan , : ) , [ 0 -1 ] ) ) ) / 360        ;  
+                          sign_correction                                                           ;   
+d_t                     = diff( vertcat( circshift( out_t( i_scan , : ) , [ 0 +1 ] ) ,            	...
+                                         circshift( out_t( i_scan , : ) , [ 0 -1 ] ) ) ) / 360   	;  
 diff_c( i_scan , : )    = out_c( i_scan , : ) - pipe_in                                             ;
 pos_patch               = [ 0 sign( diff_c( i_scan , 2 : ( end ) ) ) ] > 0                          ;
 pos_patch( end )        = 0                                                                         ;
 diff_locs               = diff( [ pos_patch( 1 ) , pos_patch ] )                                    ;
-% starts                  = ( pos_patch & ~circshift( pos_patch , 1 , 2 ) )                           ;
-% ends                    = ( pos_patch & ~circshift( pos_patch , -1 , 2 ) )                          ;
-starts                  = ( pos_patch & ~circshift( pos_patch , [ 0 +1 ] ) )                           ;
-ends                    = ( pos_patch & ~circshift( pos_patch , [ 0 -1 ] ) )                          ;
+starts                  = ( pos_patch & ~circshift( pos_patch , [ 0 +1 ] ) )                        ;
+ends                    = ( pos_patch & ~circshift( pos_patch , [ 0 -1 ] ) )                        ;
 start_inds              = find( starts ) +0                                                         ;
 end_inds                = find( ends ) -0                                                           ;
 
@@ -77,10 +73,9 @@ m                       = max( diffs )                                          
 [ shape_x , shape_y ]   = deal( nan( 2*( m + 1 ) , numel( diffs ) ) )                               ;
 corrosion( i_scan )     = nansum( .5 * d_t(          pos_patch ) .*                                 ...
                             	(    out_c( i_scan , pos_patch ) .^2 - pipe_in_sq ) )               ;
+max_corrosion( i_scan ) = max( out_c( i_scan , pos_patch ) ) - pipe_in                              ;
 corr_bounds           	= [ max( i_scan-30 , 1 ) , min( i_scan+30 , numel( corrosion ) ) ]       	;
 corr_range              = corr_bounds( 1 ) : round( corr_bounds( 2 ) - 5 )                          ;
-% cmap                    = flipud( jet( numel( diffs ) ) )                                           ;
-% current_ticks           = get( h.corrosion , 'XTicks'
 
 try
     delete( findobj( gca , 'type' , 'patch' ) )
@@ -101,5 +96,6 @@ for i_shape = 1 : numel( diffs )
 end
 
 fit_title{ i_scan }     = sprintf( fit_title_string ,                                                   ...
-                                     p( i_scan , : ) , vertex( i_scan , : ) - [ 90 0 ] )                ;
+                                     p( i_scan , : ) ,                                                  ...
+                                     vertex( i_scan , : ) - [ 90 0 ] )                                  ;
 end                     
