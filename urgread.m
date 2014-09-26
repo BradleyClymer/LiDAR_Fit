@@ -67,20 +67,19 @@ urg_ts          = [ urg_struct.timeStamp ]'                                 ;
 ipd_ts          = [ ipd_struct.clock ]                                      ;
 disp( 'Matching distance indeces' )                             
 
-%   For a single value of the urg timestamp - 'urg_ts( i )' - subtract it
-%   from the IPD timestamp at all values. 
+%   Quick interpolation of distance information; the ipd file's time
+%   resolution is very coarse, so a cubic split is used to infer samples in
+%   between. Result is far more smooth, and more accurate than a previously
+%   tried 30-sample moving average.
 
-for i = 1 : numel( urg_ts )
-    abs_diff        = ( ipd_ts - urg_ts( i ) ) .^2                          ;
-    ipd_index( i )  = mean( find( abs_diff == min( abs_diff ) , 1 ) )       ;
-end 
+urg_ft              = spline( ipd_ts , ipd_struct.ft , urg_ts )             ;
 
-urg_ft              = ipd_struct.ft( ipd_index )                            ;
 figure
 h.urg_distance      = plot( urg_ts - min( urg_ts ) ,                        ...
                             urg_ft( 1 : numel( urg_ts ) ) ,                 ...
                             'LineSmoothing' , 'on' ,                        ...
                             'LineWidth' , 3 )                               ;
+grid on                         
 title( urg_struct( 1 ).dateString )
 xt                  = get( get( h.urg_distance , 'Parent' ) , 'XTick' )     ;
 xtl                 = datestr( xt , 'MM:SS' )                               ;
@@ -108,13 +107,14 @@ else
     load( 'df.mat' ) 
 end
 t_start         = tic                                                       ;
+
 %%  Constants and settings
 %   Here we set overall parameters for the processing. 
 
 plot_parabola   = false                                                     ;
 add_parab_fig   = false                                                     ;
 run_calculations= true                                                      ;
-disp_plots      = true                                                     ;
+disp_plots      = false                                                     ;
 fit_order    	= 6                                                         ;  
 add_legends     = false                                                     ;
 find_edges      = false                                                     ;
@@ -293,7 +293,7 @@ for i_scan = desired_scans
                 separate_parabola_update
             end
             corrosion_history
-%             find_corners
+            find_corners
         end
         
         catch big_loop_error
@@ -301,9 +301,7 @@ for i_scan = desired_scans
             
             disp( big_loop_error )
             return
-%             pause
         end
-%         clear out_c out_t x_scan y_scan
         if ~mod( i_scan , 100 )
         progress_frac       = ( i_scan - min( desired_scans ) ) / numel( desired_scans )    ;
         time_so_far         = ( toc( t_start ) )                                            ;
@@ -313,9 +311,61 @@ for i_scan = desired_scans
                                           time_remain / 60 , time_per_scan * 100 )          ;
         waitbar( progress_frac , h.wait , time_string )
         end
+        drawnow
 end
-%% 
-close all
+%%  Saving of files
+
 toc( t_start )
-save( 'distance_and_corrosion.mat' , 'urg_ft' , 'corrosion' )
-profile viewer
+save( 'distance_and_corrosion.mat' , 'urg_ft' , 'corrosion' , 'max_ corrosion' )
+
+
+%%  Final Figure Output
+close all
+figure( 'Units' , 'Normalized' , 'Position' , [ 0.31302      0.25278      0.38906      0.56852 ] )
+
+sp( 1 ) = subplot( 211 ) 
+plot( urg_ft , max_corrosion , '-r' , 'MarkerEdgeColor' , [ 0.9 0.1 0.1 ] , 'MarkerFaceColor' , [ 1 1 1 ] )
+title( 'Max Corrosion by Foot' )
+xlabel( 'Feet' )
+ylabel( 'Inches' )
+grid on
+axis tight
+ylim( [ 0 3 ] )
+
+sp( 2 ) = subplot( 212 )
+plot( urg_ft , corrosion , '-k' ) 
+title( 'Corrosion Area by Foot'  )
+xlabel( 'Feet' )
+ylabel( 'Square Inches' )
+grid on
+axis tight
+ylim( [ 0 3 ] )
+
+linkaxes( sp , 'x' )
+
+output_folder    	= 'P:\Dropbox (Future Scan)\Screenshots\Corrosion Pictures'     ;
+these_indeces       = 1                                                             ;
+
+for distance = 50 : 50 : urg_ft( end )
+    last_indeces    = these_indeces                             ;
+    difference      = abs( distance-urg_ft )                    ;
+    these_indeces   = find( difference == min( difference ) )   ;
+    start_index     = last_indeces( end )                       ;
+    finish_index    = these_indeces( 1 )                        ;
+    limits          = urg_ft( [ start_index finish_index ] )    ;
+    axis tight
+    xlim( limits )
+    this_range      = start_index : finish_index                ;
+    this_std( 1 )   = std( max_corrosion( this_range ) )        ;
+    this_std( 2 )   = std( corrosion( this_range ) )            ;
+    this_mean( 1 )  = mean( max_corrosion( this_range ) )       ;
+    this_mean( 2 )  = mean( corrosion( this_range ) )           ;
+    y_range( 1,: )  = this_mean( 1 ) + 5*this_std( 1 ) * [-0.5,1.2] ;
+    y_range( 2,: )  = this_mean( 2 ) + 5*this_std( 2 ) * [-0.5,1.2] ;
+    ylim( sp( 1 ) , y_range( 1 , : ) )                          ;
+    ylim( sp( 2 ) , y_range( 2 , : ) )                          ;
+    drawnow
+    this_title      = sprintf( '%s Corrosion %0.0fft to %0.0fft' , fn( 1:(end-4) ) , limits( 1 ) , limits( 2 ) )
+    this_file       = fullfile( output_folder , this_title )    ;
+    export_fig( this_file , '-m2' , '-nocrop' , '-transparent' ) 
+end

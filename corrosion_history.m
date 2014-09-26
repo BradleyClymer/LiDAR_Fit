@@ -1,4 +1,4 @@
-his.radius          = 120                                        ;
+his.radius          = 60                                     	;
 his.num_stds        = 5                                         ;
 his.error_tol       = 3                                         ;
 his.start           = max( [ 1 , ( i_scan-his.radius ) ] )      ;
@@ -11,10 +11,14 @@ his.maxmean         = mean( his.area )                       	;
 his.areamedian      = median( his.area )                        ;
 his.iqr             = iqr( his.area ) / 2                       ;
 his.oldlims         = get( h.corrosion , 'YLim' )               ;
-his.std_range       = his.iqr * ( his.num_stds * [ 1 -1 ] )     ; 
-his.newlims         = ( his.areamedian - his.std_range )
+his.std_range       = his.iqr * ( his.num_stds * [ 1 -1 ] )     ;
+his.std_range       = [ 6 -6 ]                                  ;
+his.newlims         = ( his.areamedian - his.std_range )        ;
 his.error           = his.oldlims - his.newlims                 ;
-if any( abs( his.error ) > his.maxstd ) && any( his.newlims )
+% if any( abs( his.error ) > his.maxstd ) && any( his.newlims )
+try
     set( h.corrosion , 'YLim' , his.newlims )
+catch
 end
+% end
 

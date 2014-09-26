@@ -46,7 +46,7 @@ end
 par_rec( end , : )      = CircleFitByTaubin( [  all_x_med( i_scan , curr_fit_range )'               ...
                                                 all_y_med( i_scan , curr_fit_range )' ] )           ;   % [ x y R ] output
 par( i_scan, : )        = sum( par_rec .* filter_mat )                                              ;
-                          axes( h.scan )                                                            ;
+if disp_plots, axes( h.scan ), end
 
 x_scan( i_scan , : )    = all_x_med( i_scan , : ) - par( i_scan , 1 )                               ;%- par( i_scan, 1 )                                ;
 y_scan( i_scan , : )    = all_y_med( i_scan , : ) - par( i_scan , 2 ) + pipe_in - par( i_scan ,3)	;
