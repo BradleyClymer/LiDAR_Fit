@@ -71,9 +71,13 @@ disp( 'Matching distance indeces' )
 %   resolution is very coarse, so a cubic split is used to infer samples in
 %   between. Result is far more smooth, and more accurate than a previously
 %   tried 30-sample moving average.
-
+tic
 urg_ft              = spline( ipd_ts , ipd_struct.ft , urg_ts )             ;
-
+toc
+% tic
+% uf                  = ipd_struct.ft( vector_nearest_match( ipd_ts , urg_ts ) )  ;
+% toc
+return
 figure
 h.urg_distance      = plot( urg_ts - min( urg_ts ) ,                        ...
                             urg_ft( 1 : numel( urg_ts ) ) ,                 ...
