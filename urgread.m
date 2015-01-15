@@ -1,10 +1,11 @@
 clc
 close all hidden
 colordef black
+colordef white
 profile off
 old_folder      = pwd 
 data_folder     = old_folder
-data_folder     = 'P:\Dropbox (Future Scan)\Flyswatter (1)\DATA Flyswatter Project\tra_rjn_ef3_carrollton\1690E_1680E'
+% data_folder     = 'P:\Dropbox (Future Scan)\Flyswatter (1)\DATA Flyswatter Project\tra_rjn_ef3_carrollton\1690E_1680E'
 
 %%  Input Parsing Block. 
 %   Asks for UrgBenri file, passes it to the file pre-processor, 
@@ -49,7 +50,8 @@ if fu
         disp( 'Raw IPD file has been read' )
     end
 else
-    spoofed.ft  = ( 0 : ( numel( urg_struct ) -1 ) ) / 80                   ;
+%     spoofed.ft  = ( 0 : ( numel( urg_struct ) -1 ) ) / 80    ;
+    spoofed.ft  = linspace( 0 , 21.6 , numel( urg_struct ) )
     ipd_struct	= struct( 'ft' ,  spoofed.ft  , 'clock' , [ urg_struct.timeStamp ] , 'num_scans' , size( urg_struct , 1 ) )	;
     disp( 'IPD struct spoofed.' )
     cd( old_folder )
@@ -77,7 +79,7 @@ toc
 % tic
 % uf                  = ipd_struct.ft( vector_nearest_match( ipd_ts , urg_ts ) )  ;
 % toc
-return
+% return
 figure
 h.urg_distance      = plot( urg_ts - min( urg_ts ) ,                        ...
                             urg_ft( 1 : numel( urg_ts ) ) ,                 ...
@@ -118,8 +120,8 @@ t_start         = tic                                                       ;
 plot_parabola   = false                                                     ;
 add_parab_fig   = false                                                     ;
 run_calculations= true                                                      ;
-disp_plots      = false                                                     ;
-fit_order    	= 6                                                         ;  
+disp_plots      = true                                                      ;
+fit_order    	= 7                                                         ;  
 add_legends     = false                                                     ;
 find_edges      = false                                                     ;
 
@@ -136,7 +138,7 @@ y_weight        = sind( angles_deg )                                        ;
 angles_rad      = angles_deg  * pi / 180                                    ;   % -45 : 225 in radians
 angle_offset    = +10                                                       ;
 
-pipe_diameter   = 45                                                        ;
+pipe_diameter   = 24                                                        ;
 float_width     = 13                                                        ;
 pipe_in         = pipe_diameter / 2                                         ;   % pipe radius in inches
 pipe_in_sq      = pipe_in ^ 2                                               ;
@@ -149,7 +151,7 @@ vertex( 1 )     = 90                                                        ;
 vertex( 2 )     = pipe_in                                                   ;
 
 
-filter_order    = 5                                                        ;   % order of the median filter
+filter_order    = 2                                                        ;   % order of the median filter
 filter_roll     = -3                                                         ;   % filter roll-off rate
 filter_raw      = exp( filter_roll * ( filter_order : -1 : 1 )' /filter_order  )       ;   % generate some filter coefficients
 filter_new      = filter_raw / ( sum( filter_raw , 1 ) / 1 )                ;   % normalize coefficients
@@ -265,7 +267,7 @@ clear fars fit_range infs %all_x_raw all_y_raw
 
 generate_initial_figures                                                                ;
 
-desired_scans   = 800 : size( all_scans , 1 )                                           ;
+desired_scans   = 1 : size( all_scans , 1 )                                           ;
 % desired_scans   = 1000 : 1500                                                               ;
 parab_order     = 2                                                                     ;
 fit_to_all      = false                                                                 ;
@@ -320,7 +322,7 @@ end
 %%  Saving of files
 
 toc( t_start )
-save( 'distance_and_corrosion.mat' , 'urg_ft' , 'corrosion' , 'max_ corrosion' )
+save( 'distance_and_corrosion.mat' , 'urg_ft' , 'corrosion' , 'max_corrosion' )
 
 
 %%  Final Figure Output

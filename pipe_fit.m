@@ -46,7 +46,9 @@ end
 par_rec( end , : )      = CircleFitByTaubin( [  all_x_med( i_scan , curr_fit_range )'               ...
                                                 all_y_med( i_scan , curr_fit_range )' ] )           ;   % [ x y R ] output
 par( i_scan, : )        = sum( par_rec .* filter_mat )                                              ;
-if disp_plots, axes( h.scan ), end
+if disp_plots, 
+    axes( h.scan ), 
+end
 
 x_scan( i_scan , : )    = all_x_med( i_scan , : ) - par( i_scan , 1 )                               ;%- par( i_scan, 1 )                                ;
 y_scan( i_scan , : )    = all_y_med( i_scan , : ) - par( i_scan , 2 ) + pipe_in - par( i_scan ,3)	;
@@ -73,7 +75,11 @@ m                       = max( diffs )                                          
 [ shape_x , shape_y ]   = deal( nan( 2*( m + 1 ) , numel( diffs ) ) )                               ;
 corrosion( i_scan )     = nansum( .5 * d_t(          pos_patch ) .*                                 ...
                             	(    out_c( i_scan , pos_patch ) .^2 - pipe_in_sq ) )               ;
-max_corrosion( i_scan ) = max( out_c( i_scan , pos_patch ) ) - pipe_in                              ;
+if any( pos_patch )
+    max_corrosion( i_scan )     = max( out_c( i_scan , pos_patch ) ) - pipe_in                   	;
+else 
+    max_corrosion( i_scan )     = 0                                                                 ;
+end
 corr_bounds           	= [ max( i_scan-30 , 1 ) , min( i_scan+30 , numel( corrosion ) ) ]       	;
 corr_range              = corr_bounds( 1 ) : round( corr_bounds( 2 ) - 5 )                          ;
 
